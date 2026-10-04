@@ -1,0 +1,10 @@
+target/
+.DS_Store
+
+# Archivos de trabajo personales: no se suben
+CONTEXTO.md
+*.md
+!README.md
+
+# Carpeta basura creada por otro equipo
+~/

@@ -277,7 +277,7 @@ public class clase1 {
                         caja(x, altura / 2 + 0.3f, z, 7, altura, 7, tono[0], tono[1], tono[2]); // Coloca la base del edificio sobre la acera.
                         caja(x, altura + 0.45f, z, 7.3f, 0.3f, 7.3f, 0.20f, 0.26f, 0.32f); // Añade una cubierta más ancha y oscura.
                     } else { // El tipo 2 representa un parque.
-                        caja(x, 0.32f, z, 9, 0.1f, 9, 0.20f, 0.45f, 0.28f); // Cubre la parcela con césped verde.
+                        caja(x, 0.32f, z, 9, 0.1f, 9, 0.55f, 0.78f, 0.25f); // Cubre la parcela con césped verde lechuga (#8CC63F).
                     }
                 }
             }
@@ -287,13 +287,13 @@ public class clase1 {
     /** Dibuja las líneas discontinuas de las calles dejando los cruces despejados. */
     private void dibujarMarcasCalle(int fila, int columna, float x, float z) {
         if (fila % 2 == 0 && columna % 2 == 1) { // Identifica un tramo horizontal situado entre cruces.
-            for (int desplazamiento = -3; desplazamiento <= 3; desplazamiento += 3) { // Coloca tres marcas en la celda.
-                caja(x + desplazamiento, 0.025f, z, 1.6f, 0.03f, 0.13f, 1, 0.84f, 0.35f); // Dibuja una línea alargada en X.
+            for (float desplazamiento = -2.5f; desplazamiento <= 2.5f; desplazamiento += 2.5f) { // Coloca tres marcas lejos de los pasos peatonales.
+                caja(x + desplazamiento, 0.025f, z, 1.4f, 0.03f, 0.13f, 1, 0.84f, 0.35f); // Dibuja una línea alargada en X.
             }
         }
         if (columna % 2 == 0 && fila % 2 == 1) { // Identifica un tramo vertical situado entre cruces.
-            for (int desplazamiento = -3; desplazamiento <= 3; desplazamiento += 3) { // Repite las marcas sobre ese tramo.
-                caja(x, 0.025f, z + desplazamiento, 0.13f, 0.03f, 1.6f, 1, 0.84f, 0.35f); // Dibuja una línea alargada en Z.
+            for (float desplazamiento = -2.5f; desplazamiento <= 2.5f; desplazamiento += 2.5f) { // Repite las marcas sobre ese tramo.
+                caja(x, 0.025f, z + desplazamiento, 0.13f, 0.03f, 1.4f, 1, 0.84f, 0.35f); // Dibuja una línea alargada en Z.
             }
         }
     }

@@ -174,16 +174,44 @@ public class clase2 extends clase1 {
         dibujarAuto(); // Añade el modelo del vehículo sobre la ciudad.
     }
 
-    /** Construye el auto con cajas; argumentos: posición XYZ, tamaño XYZ y color RGB. */
+    /**
+     * Construye un sedán deportivo al estilo Mitsubishi Lancer Evolution X en color fucsia (#FF00FF).
+     * Argumentos de pieza(): posición XYZ local (frente hacia -Z), tamaño XYZ y color RGB.
+     * Todo cabe dentro del círculo de colisión RADIO_AUTO.
+     */
     protected void dibujarAuto() {
-        pieza(0, 0.65f, 0, 1.65f, 0.55f, 2.6f, 0.95f, 0.24f, 0.12f); // Dibuja la carrocería roja.
-        pieza(0, 1.12f, 0.12f, 1.3f, 0.55f, 1.25f, 0.22f, 0.65f, 0.78f); // Dibuja la cabina azulada.
+        float rojo = 1.0f; // Fucsia #FF00FF: rojo completo.
+        float verde = 0.0f; // Fucsia: sin verde.
+        float azul = 1.0f; // Fucsia: azul completo.
+        float negro = 0.04f; // Negro de parrilla, alerón y faldones.
+
+        // Carrocería: base baja, capó delante, maletero detrás, cabina de vidrio y techo.
+        pieza(0, 0.58f, 0, 1.7f, 0.46f, 2.7f, rojo, verde, azul); // Carrocería inferior fucsia.
+        pieza(0, 0.84f, -0.78f, 1.62f, 0.08f, 1.05f, rojo, verde, azul); // Capó, más bajo que la cabina.
+        pieza(0, 0.86f, 1.05f, 1.62f, 0.1f, 0.55f, rojo, verde, azul); // Tapa del maletero.
+        pieza(0, 1.1f, 0.15f, 1.44f, 0.46f, 1.25f, 0.10f, 0.12f, 0.16f); // Cabina de vidrio polarizado.
+        pieza(0, 1.35f, 0.18f, 1.34f, 0.06f, 1.0f, rojo, verde, azul); // Techo fucsia.
+
+        // Detalles del Evo X: parrilla trapezoidal, tomas de aire, alerón, faldones, espejos y escape.
+        pieza(0, 0.62f, -1.36f, 0.62f, 0.26f, 0.04f, negro, negro, negro); // Parrilla negra central.
+        pieza(0, 0.42f, -1.36f, 1.3f, 0.12f, 0.04f, negro, negro, negro); // Toma de aire inferior ancha.
+        for (int lado = -1; lado <= 1; lado += 2) { // Lado izquierdo y derecho.
+            pieza(lado * 0.3f, 0.885f, -0.75f, 0.26f, 0.02f, 0.32f, negro, negro, negro); // Rejilla en el capó.
+            pieza(lado * 0.86f, 0.36f, 0, 0.04f, 0.1f, 1.5f, negro, negro, negro); // Faldón lateral.
+            pieza(lado * 0.82f, 1.0f, -0.3f, 0.14f, 0.08f, 0.12f, rojo, verde, azul); // Espejo retrovisor.
+            pieza(lado * 0.6f, 1.0f, 1.2f, 0.08f, 0.24f, 0.1f, negro, negro, negro); // Soporte del alerón.
+        }
+        pieza(0, 1.14f, 1.22f, 1.62f, 0.05f, 0.32f, negro, negro, negro); // Alerón trasero.
+        pieza(0.5f, 0.36f, 1.37f, 0.14f, 0.1f, 0.06f, 0.75f, 0.75f, 0.78f); // Escape cromado.
+
         float[] ladosRuedas = {-0.88f, 0.88f}; // Ubica ruedas a izquierda y derecha del auto.
-        float[] ejesRuedas = {-0.82f, 0.82f}; // Ubica las ruedas delanteras y traseras.
+        float[] ejesRuedas = {-0.85f, 0.85f}; // Ubica las ruedas delanteras y traseras.
 
         for (float x : ladosRuedas) { // Selecciona uno de los dos lados del vehículo.
             for (float z : ejesRuedas) { // Selecciona el eje delantero o trasero.
-                pieza(x, 0.38f, z, 0.24f, 0.58f, 0.6f, 0.055f, 0.065f, 0.08f); // Dibuja una rueda oscura.
+                pieza(x, 0.38f, z, 0.24f, 0.58f, 0.6f, 0.055f, 0.065f, 0.08f); // Dibuja un neumático oscuro.
+                float exterior = Math.signum(x) * 1.005f; // Cara exterior de la rueda.
+                pieza(exterior, 0.38f, z, 0.02f, 0.34f, 0.34f, 0.32f, 0.33f, 0.35f); // Llanta gris oscuro.
             }
         }
 
@@ -192,7 +220,7 @@ public class clase2 extends clase1 {
             if (farosEncendidos()) { // Un faro encendido es una fuente de luz: se ve brillante.
                 entero("uEmision", 1); // Dibuja la bombilla sin oscurecerla con la iluminación.
             }
-            pieza(x, 0.68f, -1.32f, 0.38f, 0.2f, 0.07f, 1, 0.95f, 0.65f); // Dibuja un faro delantero claro.
+            pieza(x, 0.74f, -1.37f, 0.42f, 0.12f, 0.05f, 1, 0.95f, 0.65f); // Faro delantero rasgado.
             entero("uEmision", 0); // Las demás piezas reciben la luz del entorno.
             float rojoTrasero = 0.85f; // Rojo normal de la luz trasera apagada.
             if (frenando) { // Al frenar la luz trasera se enciende con fuerza.
@@ -202,7 +230,7 @@ public class clase2 extends clase1 {
                 entero("uEmision", 1); // La luz de posición también es una fuente de luz.
                 rojoTrasero = 0.55f; // Usa un rojo más suave que el de freno.
             }
-            pieza(x, 0.68f, 1.32f, 0.35f, 0.17f, 0.07f, rojoTrasero, 0.05f, 0.05f); // Dibuja una luz trasera roja.
+            pieza(x, 0.74f, 1.37f, 0.38f, 0.12f, 0.06f, rojoTrasero, 0.05f, 0.05f); // Dibuja una luz trasera roja.
             entero("uEmision", 0); // Devuelve la iluminación normal a las siguientes piezas.
         }
     }

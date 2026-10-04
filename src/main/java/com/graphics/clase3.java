@@ -17,6 +17,7 @@ public class clase3 extends clase2 {
     protected float factorNoche = 1; // Mezcla actual entre día (0) y noche (1); cambia poco a poco.
     protected static final float DURACION_TRANSICION = 1.2f; // Segundos que tarda el paso de día a noche.
     protected static final float ALTURA_BOMBILLA = 4.6f; // Altura desde la que cada farola emite su luz.
+    protected static final int PLAZA = MAPA.length / 2; // Fila y columna del parque central (plaza con fuente).
 
     /** Cada fila: X, Y, Z de la bombilla (lo que usa el shader) y X, Z del poste sobre la acera. */
     protected static final float[][] LUCES = crearFarolas();
@@ -25,6 +26,7 @@ public class clase3 extends clase2 {
      * Coloca una farola junto a las intersecciones alternadas como un tablero de ajedrez.
      * Así cada calle tiene una farola cerca y todos los sectores quedan iluminados.
      * El poste va en la esquina de acera de la manzana vecina y su brazo lleva la bombilla sobre la calle.
+     * Además, la plaza central lleva una farola en cada una de sus cuatro esquinas.
      */
     private static float[][] crearFarolas() {
         java.util.List<float[]> farolas = new java.util.ArrayList<>(); // Acumula las posiciones encontradas.
@@ -34,18 +36,50 @@ public class clase3 extends clase2 {
                 if ((fila / 2 + columna / 2) % 2 != 0) { // Salta una intersección de cada dos.
                     continue; // Pasa a la siguiente intersección.
                 }
-                int filaManzana = fila < ultima ? fila + 1 : fila - 1; // Elige la manzana de abajo, o la de arriba en el borde sur.
-                int columnaManzana = columna < ultima ? columna + 1 : columna - 1; // Elige la manzana derecha, o la izquierda en el borde este.
-                float haciaX = columna - columnaManzana; // Vale -1 o 1: sentido X hacia la intersección.
-                float haciaZ = fila - filaManzana; // Vale -1 o 1: sentido Z hacia la intersección.
-                float posteX = centro(columnaManzana) + haciaX * 4.3f; // Ubica el poste en la esquina de la acera.
-                float posteZ = centro(filaManzana) + haciaZ * 4.3f; // Ubica el poste en la esquina de la acera.
-                float bombillaX = posteX + haciaX * 1.0f; // El brazo adelanta la bombilla sobre el borde de la calle.
-                float bombillaZ = posteZ + haciaZ * 1.0f; // El brazo adelanta la bombilla sobre el borde de la calle.
-                farolas.add(new float[] {bombillaX, ALTURA_BOMBILLA, bombillaZ, posteX, posteZ}); // Guarda bombilla y poste.
+                farolas.add(farola(esquinaAcera(fila, columna))); // Farola en la esquina de acera que toca esta intersección.
+            }
+        }
+        for (int haciaZ = -1; haciaZ <= 1; haciaZ += 2) { // Esquinas norte y sur de la plaza central.
+            for (int haciaX = -1; haciaX <= 1; haciaX += 2) { // Esquinas oeste y este.
+                float posteX = centro(PLAZA) + haciaX * 4.3f; // Esquina de la acera en X.
+                float posteZ = centro(PLAZA) + haciaZ * 4.3f; // Esquina de la acera en Z.
+                boolean repetida = false; // El tablero de ajedrez ya pudo poner farola en esta esquina.
+                for (float[] existente : farolas) { // Compara con las farolas ya creadas.
+                    if (Math.abs(existente[3] - posteX) < 0.01f && Math.abs(existente[4] - posteZ) < 0.01f) { // Mismo poste.
+                        repetida = true; // No se duplica.
+                    }
+                }
+                if (!repetida) { // Esquina libre.
+                    farolas.add(farola(new float[] {posteX, posteZ, haciaX, haciaZ})); // Agrega la farola de la plaza.
+                }
             }
         }
         return farolas.toArray(new float[0][]); // Convierte la lista en la matriz usada por el shader.
+    }
+
+    /** Arma una farola a partir de una esquina (poste X, Z y sentido X, Z hacia el cruce): bombilla XYZ y poste XZ. */
+    private static float[] farola(float[] esquina) {
+        float posteX = esquina[0]; // Ubica el poste en la esquina de la acera.
+        float posteZ = esquina[1]; // Ubica el poste en la esquina de la acera.
+        float bombillaX = posteX + esquina[2] * 1.0f; // El brazo adelanta la bombilla sobre el borde de la calle.
+        float bombillaZ = posteZ + esquina[3] * 1.0f; // El brazo adelanta la bombilla sobre el borde de la calle.
+        return new float[] {bombillaX, ALTURA_BOMBILLA, bombillaZ, posteX, posteZ}; // Bombilla y poste.
+    }
+
+    /**
+     * Devuelve la esquina de acera junto a una intersección: poste X, poste Z y sentido X, Z hacia el cruce (-1 o 1).
+     * Usa la manzana de abajo a la derecha, o la de arriba / izquierda en los bordes sur y este.
+     * Farolas y semáforos (clase4) la comparten, así cada poste queda en una esquina distinta.
+     */
+    protected static float[] esquinaAcera(int fila, int columna) {
+        int ultima = MAPA.length - 1; // Índice de la última fila y columna del mapa.
+        int filaManzana = fila < ultima ? fila + 1 : fila - 1; // Elige la manzana de abajo, o la de arriba en el borde sur.
+        int columnaManzana = columna < ultima ? columna + 1 : columna - 1; // Elige la manzana derecha, o la izquierda en el borde este.
+        float haciaX = columna - columnaManzana; // Vale -1 o 1: sentido X hacia la intersección.
+        float haciaZ = fila - filaManzana; // Vale -1 o 1: sentido Z hacia la intersección.
+        float posteX = centro(columnaManzana) + haciaX * 4.3f; // Esquina de la acera en X.
+        float posteZ = centro(filaManzana) + haciaZ * 4.3f; // Esquina de la acera en Z.
+        return new float[] {posteX, posteZ, haciaX, haciaZ}; // Entrega posición y sentido.
     }
 
     // ==================== 2. CONTROLES E INDICADORES ====================
@@ -204,21 +238,27 @@ public class clase3 extends clase2 {
             if (faros) { // Los faros encendidos tienen su propio halo blanco.
                 for (float lado : new float[] {-0.55f, 0.55f}) { // Recorre faro izquierdo y derecho.
                     float[] punto = puntoDelAuto(lado, -1.36f); // Ubica el faro en la ciudad.
-                    caja(punto[0], 0.68f, punto[1], 1.3f, 1.3f, 1.3f, visibilidad, visibilidad * 0.95f, visibilidad * 0.8f); // Halo del faro.
+                    caja(punto[0], 0.74f, punto[1], 1.3f, 1.3f, 1.3f, visibilidad, visibilidad * 0.95f, visibilidad * 0.8f); // Halo del faro.
                 }
             }
             if (frenando || faros) { // Las luces traseras brillan al frenar o con los faros encendidos.
                 float rojo = frenando ? 0.9f : 0.4f * visibilidad; // El freno brilla más que la luz de posición.
                 for (float lado : new float[] {-0.55f, 0.55f}) { // Recorre ambas luces traseras.
                     float[] punto = puntoDelAuto(lado, 1.38f); // Ubica la luz trasera en la ciudad.
-                    caja(punto[0], 0.68f, punto[1], 1.1f, 1.1f, 1.1f, rojo, rojo * 0.06f, rojo * 0.04f); // Halo rojo.
+                    caja(punto[0], 0.74f, punto[1], 1.1f, 1.1f, 1.1f, rojo, rojo * 0.06f, rojo * 0.04f); // Halo rojo.
                 }
             }
+            halosAdicionales(); // Permite a clase4 sumar halos propios (plaza central).
         } finally { // Vuelve a la configuración de dibujo de objetos sólidos.
             entero("uBrillo", 0); // Desactiva el modo halo.
             glDepthMask(true); // Vuelve a escribir profundidad.
             glDisable(GL_BLEND); // Desactiva la mezcla.
         }
+    }
+
+    /** Reserva el punto donde clase4 dibuja más halos; se llama con la mezcla aditiva ya activada. */
+    protected void halosAdicionales() {
+        // No necesita instrucciones en clase3: solo hay farolas y luces del auto.
     }
 
     // ==================== 7. CÁLCULO DE LUZ EN LA GPU ====================

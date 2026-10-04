@@ -17,6 +17,42 @@ Ejecuta un comando por vez; ESC cierra la ventana. `mvn compile exec:exec` abre 
 
 Incluye bibliotecas nativas para macOS Intel/Apple Silicon, Windows x64 y Linux x64/ARM64. Se necesita una sesión gráfica y un controlador compatible con OpenGL 3.3. No está diseñado para ejecutarse en un servidor sin pantalla.
 
+## Mejoras realizadas sobre el proyecto base
+
+### 1. Ciudad ampliada
+- Mapa de **11 × 11 celdas** (110 × 110 unidades, `LIMITE = 55`), con el mismo tamaño de celda (10).
+- 6 avenidas en cada sentido y 25 manzanas: **19 edificios y 6 parques**, todas conectadas por la red vial.
+- Cinco sectores: Centro, Barrio Norte, Barrio Sur, Distrito Oeste y Distrito Este. Cada uno tiene su propia
+  paleta de color y rango de alturas (`sector()`, `alturaEdificio()`, `colorEdificio()` en clase1); el Centro tiene rascacielos.
+- Suelo, límites, colisiones, cámara aérea y escala del minimapa (`uEscalaMapa`) se calculan a partir del mapa.
+- El auto parte de la esquina suroeste (-50, 50) y hay **4 entregas** sobre calles de sectores distintos.
+
+### 2. Iluminación
+- **21 farolas** generadas automáticamente junto a las intersecciones (patrón de tablero de ajedrez), con base,
+  poste, brazo sobre la calle y bombilla. Su luz se atenúa con la distancia y forma charcos de luz cálida.
+- **Transición suave día/noche** con N: luz ambiente, sol/luna, farolas y cielo cambian gradualmente.
+- Ambiente hemisférico (las caras que miran al cielo reciben más luz), sol cálido y luna azulada.
+- Reflejos especulares Blinn-Phong y niebla atmosférica que funde lo lejano con el cielo.
+- Dos **faros spotlight** con cono suave y alcance limitado (se apagan entre 20 y 28 unidades).
+- Halos de luz (billboard con mezcla aditiva) en farolas, faros y luces traseras; **luces de freno** al frenar.
+- Las bombillas usan emisión propia; el entorno recibe la luz calculada en el shader.
+
+### 3. Funciones urbanas
+- **Parques estilo jardín japonés:** mezcla de **sakura** (`#FF69B4`), **tajibo blanco** (`#FDFBF7`) y árbol verde común,
+  con pétalos caídos bajo los árboles en flor, sendero de losas (tobi-ishi), **linterna de piedra (tōrō)** que se
+  enciende de noche dos **bancos japoneses** de listones de madera sobre bloques de piedra, **arbustos** (algunos con flores rosadas),
+  **basureros** octogonales y un **bebedero**. El césped es verde lechuga (`#8CC63F`).
+- **Plaza central** (parque del centro, en (0, 0)): piso de piedra, **fuente de agua** de tres niveles con chorro y
+  cascadas animadas (de noche el agua se ilumina), **4 iluminarias** de jardín con halos nocturnos, 4 bancos mirando
+  a la fuente, sakuras y tajibos en diagonal, arbustos con flores rosadas y blancas y una farola de calle en cada esquina.
+- **Auto** estilo Mitsubishi Lancer Evolution X en **fucsia** (`#FF00FF`): parrilla negra trapezoidal, tomas de aire en
+  el capó, alerón trasero, faldones, espejos, escape y llantas, todo hecho con cajas.
+- **Ventanas:** vidrio oscuro de día; de noche unas habitaciones encendidas y otras apagadas (patrón fijo por edificio).
+- **Pasos peatonales** en ambos extremos de cada tramo de calle, junto a los cruces, con franjas paralelas al tráfico.
+- **18 semáforos** en las esquinas sin farola, con dos cabezales de fases opuestas (rojo → verde → amarillo, ciclo de 12 s).
+  Usan un reloj propio (`relojCiudad`) que no se detiene al ganar.
+- **Minimapa** con la ciudad completa, el auto (posición y orientación), el destino activo y una **N** que marca el norte arriba.
+
 ## Cómo se acumulan los avances
 
 ```text
@@ -46,7 +82,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 **Resultado:** una ciudad 3D con calles conectadas, marcas viales, edificios, aceras y parques. Las flechas izquierda/derecha orbitan la cámara.
 
 1. Leer `MAPA`: 0 es calle, 1 edificio y 2 parque. Las filas corresponden a Z y las columnas a X; Y es altura.
-2. Explicar `centro()`: convierte índices de matriz a coordenadas del mundo. Cada celda mide 10 unidades y el mapa ocupa 70 × 70.
+2. Explicar `centro()`: convierte índices de matriz a coordenadas del mundo. Cada celda mide 10 unidades y el mapa ocupa 110 × 110.
 3. Revisar `crearCubo()`: posiciones y normales en VBO, atributos en VAO y 36 vértices.
 4. Seguir `caja()` y `cajaGirada()`: un cubo unitario se transforma en asfalto, edificio o línea.
 5. Leer `vertexShader()`: modelo, cámara y perspectiva. `uMapa` deja preparado el segundo tipo de proyección que se usa en clase4.
@@ -56,7 +92,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 
 ### Clase 2 — Crear y mover el auto
 
-**Resultado:** auto rojo con cabina, ruedas y faros, cámara de seguimiento y colisiones con manzanas y borde.
+**Resultado:** auto fucsia estilo Lancer Evo X con cabina, alerón, ruedas y faros, cámara de seguimiento y colisiones con manzanas y borde.
 
 1. Leer `dibujarAuto()` y `pieza()`: las piezas usan coordenadas locales que giran y se trasladan juntas.
 2. Estudiar `actualizar(deltaTime)`: aceleración, resistencia, freno y límites de velocidad.
@@ -69,7 +105,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 
 ### Clase 3 — Focos e iluminación
 
-**Resultado:** ambiente nocturno, nueve farolas que iluminan superficies, faros del vehículo y cambio día/noche.
+**Resultado:** ambiente nocturno, veintiún farolas que iluminan superficies, faros del vehículo con alcance limitado, halos de luz, luces de freno y transición suave día/noche.
 
 1. Comparar el shader de color plano de clase1 con `fragmentShader()` de clase3.
 2. Estudiar normales y Lambert: `max(dot(normal, direccionLuz), 0)`.
@@ -79,20 +115,21 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 6. Explicar el cono de los faros con producto escalar y `smoothstep`.
 7. Comparar emisión de la bombilla con la luz calculada sobre el suelo. Son fenómenos distintos.
 
-**Ejercicio:** variar el color y la atenuación de una farola. La iluminación es local, sin sombras ni oclusión: una luz puede atravesar un edificio. Implementar shadow maps queda como ampliación. El cielo conserva el mismo fondo para concentrar la comparación día/noche en las superficies.
+**Ejercicio:** variar el color y la atenuación de una farola. La iluminación es local, sin sombras ni oclusión: una luz puede atravesar un edificio. Implementar shadow maps queda como ampliación. El color del cielo también cambia con la transición día/noche.
 
 ### Clase 4 — Ciudad final y minimapa
 
-**Resultado:** parques con árboles y bancos, ventanas iluminadas, pasos peatonales, semáforos animados, minimapa y juego de tres entregas.
+**Resultado:** parques estilo japonés (sakura, tajibo blanco, bancos y tōrō), ventanas iluminadas, pasos peatonales en los cruces, semáforos animados, minimapa y juego de cuatro entregas.
 
-1. Estudiar `decorarCiudad()` y sus métodos `dibujarParque()`, `dibujarVentanas()`, `dibujarPasoPeatonal()` y `dibujarSemaforo()`: composición de objetos reutilizando cajas y la matriz.
+1. Estudiar `decorarCiudad()` y sus métodos `dibujarParque()` (con `dibujarArbol()`, `dibujarBanco()` y `dibujarToro()`), `dibujarVentanas()`, `dibujarPasosPeatonales()` y `dibujarSemaforo()`: composición de objetos reutilizando cajas y la matriz.
 2. Leer `DESTINOS` y `actualizar()`: acercarse a menos de 3 unidades y frenar a menos de 1 unidad/segundo completa una entrega.
 3. Seguir `dibujarFrame()`: primero la cámara principal, después una vista ortográfica en otro viewport.
 4. Explicar `glScissor`: permite borrar solo el recuadro del minimapa y su profundidad.
 5. Mostrar por qué se restauran viewport, scissor y `uMapa` al terminar.
-6. Seguir el indicador cian del auto y su punta blanca; la marca dorada indica el destino activo.
+6. Seguir el indicador cian del auto y su punta blanca; la marca dorada indica el destino activo y la N el norte.
+7. Leer `faseSemaforo()`: el módulo del reloj da la fase; el cabezal cruzado usa el reloj desplazado 6 s.
 
-**Ejercicio:** agregar una cuarta entrega sobre una calle o modificar el tamaño del minimapa. El minimapa mantiene el norte (-Z) arriba. El destino se muestra también como baliza dorada en el mundo. Al completar tres entregas aparece GANASTE en el título; R reinicia.
+**Ejercicio:** agregar una quinta entrega sobre una calle o modificar el tamaño del minimapa. El minimapa mantiene el norte (-Z) arriba. El destino se muestra también como baliza dorada en el mundo. Al completar las cuatro entregas aparece GANASTE en el título; R reinicia.
 
 ## Controles
 
@@ -101,7 +138,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 | Izquierda / derecha | Orbitar la ciudad | Clase 1 únicamente |
 | W / S o arriba / abajo | Acelerar / frenar y retroceder | Clase 2 |
 | A / D o izquierda / derecha | Girar mientras el auto se mueve | Clase 2 |
-| Espacio | Freno | Clase 2 |
+| Espacio | Freno (enciende las luces de freno) | Clase 2 |
 | C | Cámara de seguimiento / aérea oblicua | Clase 2 |
 | R | Reiniciar auto y, en clase4, las entregas | Clase 2 |
 | N | Día / noche | Clase 3 |
@@ -117,8 +154,8 @@ El título de la ventana muestra velocidad en km/h (se supone una unidad = un me
 mvn test
 ```
 
-Las pruebas de lógica comprueban rutas transitables, manzanas, márgenes de colisión y reinicio sin abrir ventanas. Para un arranque gráfico breve puede pasarse `-Ddemo.frames=6` a la **JVM del juego**; al llegar a ese número de cuadros la ventana se cierra. Esta prueba necesita pantalla y comprueba también compilación/enlace de shaders y errores OpenGL.
+Las pruebas de lógica comprueban, sin abrir ventanas, el tamaño del mapa y la cantidad de edificios y parques, la variación de alturas y colores, que la red de calles esté conectada, que los destinos sean accesibles, la ubicación de las farolas en todos los sectores, la transición día/noche, los márgenes de colisión, el reinicio (incluidas las entregas), la secuencia de los semáforos, su ubicación en las aceras y la mezcla de especies de árboles. Para un arranque gráfico breve puede pasarse `-Ddemo.frames=6` a la **JVM del juego**; al llegar a ese número de cuadros la ventana se cierra. Esta prueba necesita pantalla y comprueba también compilación/enlace de shaders y errores OpenGL.
 
-Práctica manual: ejecutar cada etapa; conducir y chocar con una acera; retroceder; cambiar cámara; alternar N/F; redimensionar la ventana; alternar M; completar las tres entregas y reiniciar con R.
+Práctica manual: ejecutar cada etapa; conducir y chocar con una acera; retroceder; cambiar cámara; alternar N/F; redimensionar la ventana; alternar M; completar las cuatro entregas y reiniciar con R.
 
-Verificado en este equipo: las cuatro etapas abrieron un contexto gráfico, dibujaron seis cuadros y cerraron sin errores OpenGL. Con Java 25 y LWJGL 3.3.3 aparecen advertencias de acceso nativo, Unsafe y versión JNI; para impartir las clases se recomienda usar JDK 17, la versión objetivo de los ejemplos originales. El arranque breve no sustituye completar manualmente el recorrido.
+Verificado: las cuatro etapas abrieron un contexto gráfico, dibujaron varios cuadros y cerraron sin errores OpenGL (incluida una GPU AMD en Windows; por eso la línea `#version` de los shaders va sola, sin comentarios). Con Java 25 y LWJGL 3.3.3 aparecen advertencias de acceso nativo, Unsafe y versión JNI; para impartir las clases se recomienda usar JDK 17, la versión objetivo de los ejemplos originales. El arranque breve no sustituye completar manualmente el recorrido.

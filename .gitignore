@@ -1,6 +1,11 @@
 target/
 .DS_Store
 
+# Configuración de editores
+.vscode/
+.idea/
+*.iml
+
 # Archivos de trabajo personales: no se suben
 CONTEXTO.md
 *.md

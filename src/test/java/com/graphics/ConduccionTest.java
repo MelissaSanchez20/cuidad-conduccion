@@ -180,4 +180,77 @@ public class ConduccionTest extends TestCase {
         assertEquals(0f, juego.angulo, 0f); // Exige recuperar la dirección frontal inicial.
         assertTrue(juego.puedeCircular(juego.autoX, juego.autoZ)); // El punto de inicio está sobre la calle.
     }
+
+    /** Comprueba que R después de ganar permite repetir todas las entregas y que los semáforos no se detienen. */
+    public void testReinicioEntregas() {
+        clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
+        juego.entregas = clase4.DESTINOS.length; // Simula una partida ganada.
+        juego.tiempo = 95; // Simula el tiempo final de esa partida.
+        juego.relojCiudad = 40; // Simula el reloj de los semáforos.
+        juego.reiniciar(); // Ejecuta el mismo reinicio que se activa con R.
+        assertEquals(0, juego.entregas); // Vuelve a la primera entrega.
+        assertEquals(0f, juego.tiempo, 0f); // Reinicia el cronómetro.
+        assertEquals(40f, juego.relojCiudad, 0f); // El reloj de los semáforos no se reinicia.
+    }
+
+    /** Comprueba la secuencia rojo → verde → amarillo y que los dos cabezales de un cruce nunca están en verde a la vez. */
+    public void testSecuenciaSemaforo() {
+        assertEquals(clase4.FASE_ROJO, clase4.faseSemaforo(0)); // Empieza en rojo.
+        assertEquals(clase4.FASE_VERDE, clase4.faseSemaforo(7)); // Después pasa a verde.
+        assertEquals(clase4.FASE_AMARILLO, clase4.faseSemaforo(11)); // Después a amarillo.
+        assertEquals(clase4.FASE_ROJO, clase4.faseSemaforo(12.5f)); // Y vuelve a rojo.
+        for (float t = 0; t < 30; t += 0.1f) { // Recorre varios ciclos.
+            int fase = clase4.faseSemaforo(t); // Fase del cabezal del tráfico en Z.
+            int siguiente = clase4.faseSemaforo(t + 0.1f); // Fase un instante después.
+            if (fase != siguiente) { // Hubo un cambio de luz.
+                assertEquals((fase + 1) % 3, siguiente); // Siempre en el orden rojo → verde → amarillo → rojo.
+            }
+            int cruzada = clase4.faseSemaforo(t + 6); // Fase del cabezal del tráfico en X.
+            assertFalse(fase == clase4.FASE_VERDE && cruzada == clase4.FASE_VERDE); // Nunca ambos en verde.
+        }
+    }
+
+    /** Comprueba que los semáforos están sobre la acera y no comparten esquina con una farola. */
+    public void testSemaforosEnAcera() {
+        clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
+        assertTrue(clase4.SEMAFOROS.length >= 9); // Hay semáforos repartidos por la ciudad.
+        for (float[] semaforo : clase4.SEMAFOROS) { // Revisa cada semáforo.
+            assertFalse(juego.puedeCircular(semaforo[0], semaforo[1])); // El poste no está sobre la calle.
+            for (float[] farola : clase3.LUCES) { // Lo compara con cada farola.
+                float distancia = (float) Math.hypot(semaforo[0] - farola[3], semaforo[1] - farola[4]); // Separación de postes.
+                assertTrue(distancia > 1); // No chocan entre sí.
+            }
+        }
+    }
+
+    /** Comprueba que la celda central del mapa es un parque: allí se construye la plaza con la fuente. */
+    public void testPlazaCentralEsParque() {
+        assertEquals(2, clase1.MAPA[clase4.PLAZA][clase4.PLAZA]); // La plaza necesita una celda de parque.
+        assertEquals(0f, clase1.centro(clase4.PLAZA), 0f); // Y queda en el centro de la ciudad.
+        int esquinas = 0; // Cuenta las farolas en las esquinas de la plaza.
+        for (float[] farola : clase3.LUCES) { // Revisa cada poste.
+            if (Math.abs(Math.abs(farola[3]) - 4.3f) < 0.01f && Math.abs(Math.abs(farola[4]) - 4.3f) < 0.01f) { // Esquina de la plaza.
+                esquinas++; // Suma una esquina iluminada.
+            }
+        }
+        assertEquals(4, esquinas); // Una farola en cada esquina, sin duplicados.
+    }
+
+    /** Comprueba que los parques mezclan sakura, tajibo blanco y árbol verde común. */
+    public void testEspeciesEnParques() {
+        boolean[] usada = new boolean[3]; // Marca qué especies aparecen.
+        for (int fila = 0; fila < clase1.MAPA.length; fila++) { // Recorre las filas del mapa.
+            for (int columna = 0; columna < clase1.MAPA.length; columna++) { // Recorre las columnas.
+                if (clase1.MAPA[fila][columna] != 2) { // Solo interesan los parques.
+                    continue; // Pasa a la siguiente celda.
+                }
+                for (int indice = 0; indice < 4; indice++) { // Cuatro árboles por parque.
+                    usada[clase4.especieArbol(fila, columna, indice)] = true; // Marca la especie.
+                }
+            }
+        }
+        assertTrue(usada[clase4.ARBOL_VERDE]); // Hay árboles verdes comunes.
+        assertTrue(usada[clase4.ARBOL_SAKURA]); // Hay sakuras.
+        assertTrue(usada[clase4.ARBOL_TAJIBO]); // Hay tajibos blancos.
+    }
 }

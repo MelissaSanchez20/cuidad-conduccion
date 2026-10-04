@@ -5,7 +5,8 @@ import static org.lwjgl.opengl.GL33.*; // Permite activar la mezcla aditiva de l
 
 /**
  * CLASE 3: ILUMINACIÓN DE LA CIUDAD.
- * Conserva ciudad y conducción; añade sol, luna, farolas y focos del vehículo.
+ * Responsabilidad: iluminación. Sol, luna y transición día/noche, farolas (también las de la plaza central),
+ * faros del vehículo, halos y el shader de luz. No cambia la conducción ni el juego.
  * Orden de lectura: estado, controles, transición día/noche, uniforms, farolas, halos y shader.
  * El shader calcula iluminación local: este ejemplo todavía no proyecta sombras.
  */
@@ -96,18 +97,24 @@ public class clase3 extends clase2 {
         }
     }
 
-    /** Prepara el texto que clase2 incorpora al título de la ventana. */
+    /** Prepara el estado de iluminación que clase2 incorpora al título de la ventana. */
     @Override // Añade información al espacio reservado para indicadores.
     protected String estadoExtra() {
-        String ambiente = "dia"; // Usa día como texto inicial.
+        String ambiente = "Dia"; // Usa día como texto inicial.
         if (noche) { // Comprueba si está seleccionado el ambiente nocturno.
-            ambiente = "noche"; // Reemplaza el texto por el estado real.
+            ambiente = "Noche"; // Reemplaza el texto por el estado real.
         }
         String estadoFaros = "OFF"; // Usa apagado como texto inicial de los focos.
         if (faros) { // Comprueba si las luces del auto están activas.
             estadoFaros = "ON"; // Indica que los faros están encendidos.
         }
-        return " | N: " + ambiente + " | F: faros " + estadoFaros; // Devuelve ambos indicadores y sus teclas.
+        return " | " + ambiente + " | Faros " + estadoFaros; // Devuelve ambos indicadores.
+    }
+
+    /** Añade las teclas de iluminación a la parte de controles del título. */
+    @Override // Amplía el espacio reservado por clase2.
+    protected String controlesExtra() {
+        return " - N dia/noche - F faros"; // Teclas de ambiente y faros.
     }
 
     /** Indica a clase2 que dibuje los faros como bombillas encendidas. */

@@ -4,8 +4,9 @@ import static org.lwjgl.glfw.GLFW.*; // Permite consultar teclas y cambiar el t�
 
 /**
  * CLASE 2: CREACIÓN Y MOVIMIENTO DEL AUTO.
- * Hereda la ciudad de clase1 y agrega únicamente lo necesario para conducir.
- * Orden de lectura: variables, teclado, movimiento, colisiones, cámara y dibujo.
+ * Responsabilidad: conducción (teclado → física con deltaTime), colisiones, cámara de seguimiento,
+ * modelo del auto e indicador del título.
+ * Orden de lectura: variables, teclado, movimiento, indicador, colisiones, cámara y dibujo.
  */
 public class clase2 extends clase1 {
 
@@ -46,42 +47,42 @@ public class clase2 extends clase1 {
 
     // ==================== 3. MOVIMIENTO POR CUADRO ====================
 
-    /** Actualiza la conducción; deltaTime contiene los segundos transcurridos entre cuadros. */
+    /** Lee el teclado y entrega las órdenes del conductor a la física; deltaTime son los segundos del cuadro. */
     @Override // Cambia la cámara orbital de clase1 por el control del vehículo.
     protected void actualizar(float deltaTime) {
         float acelerador = 0; // Sin teclas pulsadas no se aplica aceleración del motor.
-        frenando = pulsada(GLFW_KEY_SPACE); // El freno de mano siempre enciende las luces de freno.
-
         if (pulsada(GLFW_KEY_W) || pulsada(GLFW_KEY_UP)) { // Acepta W o flecha arriba para avanzar.
             acelerador += 1; // Solicita aceleración hacia delante.
         }
-
         if (pulsada(GLFW_KEY_S) || pulsada(GLFW_KEY_DOWN)) { // Acepta S o flecha abajo para retroceder.
             acelerador -= 1; // Primero reduce la velocidad positiva y después entra en reversa.
-            if (velocidad > 0.5f) { // Mientras el auto todavía avanza, S funciona como freno.
-                frenando = true; // Enciende las luces de freno.
-            }
         }
+        float direccion = 0; // Sin dirección presionada el volante permanece recto.
+        if (pulsada(GLFW_KEY_A) || pulsada(GLFW_KEY_LEFT)) { // Comprueba el giro hacia la izquierda.
+            direccion += 1; // Selecciona el sentido positivo de rotación.
+        }
+        if (pulsada(GLFW_KEY_D) || pulsada(GLFW_KEY_RIGHT)) { // Comprueba el giro hacia la derecha.
+            direccion -= 1; // Selecciona el sentido negativo de rotación.
+        }
+        mover(acelerador, direccion, pulsada(GLFW_KEY_SPACE), deltaTime); // Aplica la física con las órdenes leídas.
+    }
 
+    /**
+     * Física de la conducción, separada del teclado para poder probarla sin ventana.
+     * Todo cambio se multiplica por deltaTime: el auto recorre lo mismo a 30 o a 144 cuadros por segundo.
+     */
+    protected void mover(float acelerador, float direccion, boolean freno, float deltaTime) {
+        frenando = freno || (acelerador < 0 && velocidad > 0.5f); // Espacio, o S mientras avanza, encienden las luces de freno.
         velocidad += acelerador * 9 * deltaTime; // Integra la aceleración de 9 unidades por segundo cuadrado.
         float resistencia = 0.7f; // Define la pérdida de velocidad normal al rodar.
 
-        if (pulsada(GLFW_KEY_SPACE)) { // Detecta si el usuario mantiene presionado el freno.
+        if (freno) { // Detecta si el usuario mantiene presionado el freno.
             resistencia = 7; // Aumenta la pérdida de velocidad para detenerse rápidamente.
         }
 
         float factorFrenado = (float) Math.exp(-resistencia * deltaTime); // Calcula la fracción de velocidad conservada.
         velocidad *= factorFrenado; // Aplica resistencia de forma proporcional al tiempo transcurrido.
         velocidad = Math.max(-6, Math.min(16, velocidad)); // Limita la reversa a -6 y el avance a 16.
-        float direccion = 0; // Sin dirección presionada el volante permanece recto.
-
-        if (pulsada(GLFW_KEY_A) || pulsada(GLFW_KEY_LEFT)) { // Comprueba el giro hacia la izquierda.
-            direccion += 1; // Selecciona el sentido positivo de rotación.
-        }
-
-        if (pulsada(GLFW_KEY_D) || pulsada(GLFW_KEY_RIGHT)) { // Comprueba el giro hacia la derecha.
-            direccion -= 1; // Selecciona el sentido negativo de rotación.
-        }
 
         angulo += direccion * velocidad * 0.11f * deltaTime; // Gira según la velocidad; en reversa invierte el giro.
         float frenteX = -(float) Math.sin(angulo); // Obtiene la componente X del frente del vehículo.
@@ -95,31 +96,66 @@ public class clase2 extends clase1 {
         } else { // La posición propuesta invadiría una manzana o saldría del mapa.
             velocidad = 0; // Detiene el auto conservando su última posición válida.
         }
-
-        actualizarTitulo(); // Muestra los controles y la velocidad actual.
     }
 
-    /** Compone el texto de la ventana sin mezclarlo con las fórmulas de conducción. */
-    private void actualizarTitulo() {
-        int kilometrosPorHora = Math.round(Math.abs(velocidad) * 3.6f); // Convierte m/s a km/h y redondea.
-        String titulo = getClass().getSimpleName(); // Obtiene el nombre de la etapa que se está ejecutando.
-        titulo += " | WASD/flechas: conducir | Espacio: freno"; // Añade los controles del vehículo.
-        titulo += " | C: camara | R: reiniciar | "; // Añade los controles de cámara y reinicio.
-        titulo += kilometrosPorHora + " km/h"; // Añade la magnitud de la velocidad.
+    // ==================== 4. INDICADOR EN EL TÍTULO ====================
+
+    private String tituloPublicado = ""; // Último texto enviado a la ventana.
+    private float esperaTitulo = 0; // Segundos acumulados desde la última publicación.
+
+    /** Publica el indicador como máximo diez veces por segundo y solo si el texto cambió. */
+    @Override // Usa el gancho que clase1 llama después de actualizar todas las etapas.
+    protected void actualizarIndicador(float deltaTime) {
+        esperaTitulo += deltaTime; // Acumula el tiempo desde la última publicación.
+        if (esperaTitulo < 0.1f && !tituloPublicado.isEmpty()) { // Aún no pasó una décima de segundo.
+            return; // Evita reescribir el título en cada cuadro.
+        }
+        esperaTitulo = 0; // Reinicia la espera.
+        String titulo = textoIndicador(); // Arma el texto con el estado actual.
+        if (!titulo.equals(tituloPublicado)) { // Solo se publica si cambió algo.
+            glfwSetWindowTitle(ventana, titulo); // Publica el texto en la barra superior de la ventana.
+            tituloPublicado = titulo; // Recuerda lo publicado.
+        }
+    }
+
+    /**
+     * Compone el indicador: primero el estado y al final los controles.
+     * Si la ventana es angosta y el título se recorta, se pierden los controles y no la información importante.
+     */
+    protected String textoIndicador() {
+        String titulo = "Ciudad | " + kilometrosPorHora() + " km/h"; // Empieza por la velocidad.
+        titulo += " | " + SECTORES[sectorEn(autoX, autoZ)]; // Añade el sector por el que circula el auto.
         titulo += estadoExtra(); // Permite a clase3 y clase4 añadir luces y entregas.
-        glfwSetWindowTitle(ventana, titulo); // Publica el texto en la barra superior de la ventana.
+        titulo += "   ||   WASD conducir - Espacio freno - C camara - R reiniciar"; // Controles (solo ASCII: el título no depende de la codificación).
+        titulo += controlesExtra(); // Permite a clase3 y clase4 añadir sus teclas.
+        return titulo; // Entrega el texto completo.
     }
 
-    /** Deja un espacio para los indicadores de las próximas lecciones. */
+    /** Velocidad del auto en km/h, redondeada; la usan el título y el panel de clase4. */
+    protected int kilometrosPorHora() {
+        return Math.round(Math.abs(velocidad) * 3.6f); // Convierte unidades por segundo (metros) a km/h.
+    }
+
+    /** Deja un espacio para el estado de las próximas lecciones; cada parte empieza con " | ". */
     protected String estadoExtra() {
         return ""; // En clase2 todavía no hay información adicional.
     }
 
-    // ==================== 4. COLISIONES CON LA CIUDAD ====================
+    /** Deja un espacio para las teclas de las próximas lecciones; cada parte empieza con " - ". */
+    protected String controlesExtra() {
+        return ""; // En clase2 no hay más teclas.
+    }
+
+    // ==================== 5. COLISIONES CON LA CIUDAD ====================
 
     /** Comprueba si el círculo del auto cabe en una posición sin tocar manzanas ni bordes. */
     protected boolean puedeCircular(float x, float z) {
-        float limitePermitido = LIMITE - RADIO_AUTO; // Reserva espacio para que el auto completo quede dentro.
+        return libreDeManzanas(x, z, RADIO_AUTO); // El jugador usa el radio de su auto.
+    }
+
+    /** Comprueba si un círculo de cierto radio cabe en una posición sin tocar manzanas ni bordes; lo usa también el tráfico. */
+    protected static boolean libreDeManzanas(float x, float z, float radio) {
+        float limitePermitido = LIMITE - radio; // Reserva espacio para que el vehículo completo quede dentro.
 
         if (Math.abs(x) > limitePermitido || Math.abs(z) > limitePermitido) { // Detecta salida por cualquier borde.
             return false; // Rechaza la posición exterior.
@@ -139,7 +175,7 @@ public class clase2 extends clase1 {
                 float distanciaZ = z - cercaZ; // Calcula la separación en profundidad al rectángulo.
                 float distanciaCuadrada = distanciaX * distanciaX + distanciaZ * distanciaZ; // Aplica Pitágoras sin raíz.
 
-                if (distanciaCuadrada < RADIO_AUTO * RADIO_AUTO) { // Comprueba si el círculo invade la manzana.
+                if (distanciaCuadrada < radio * radio) { // Comprueba si el círculo invade la manzana.
                     return false; // Rechaza el movimiento que produciría una colisión.
                 }
             }
@@ -148,7 +184,7 @@ public class clase2 extends clase1 {
         return true; // Acepta la posición porque no se encontró ningún obstáculo.
     }
 
-    // ==================== 5. CÁMARA ====================
+    // ==================== 6. CÁMARA ====================
 
     /** Elige entre una vista general y una cámara situada detrás del auto. */
     @Override // Personaliza la cámara creada en clase1.
@@ -165,7 +201,7 @@ public class clase2 extends clase1 {
         decimal("uAspecto", (float) ancho / alto); // Mantiene las proporciones al redimensionar la ventana.
     }
 
-    // ==================== 6. DIBUJO DEL AUTO ====================
+    // ==================== 7. DIBUJO DEL AUTO ====================
 
     /** Dibuja primero la ciudad existente y luego el vehículo. */
     @Override // Amplía el dibujo de clase1 sin copiar su código.
@@ -249,8 +285,16 @@ public class clase2 extends clase1 {
 
     /** Transforma una pieza del espacio local del auto al espacio de la ciudad. */
     protected void pieza(float x, float y, float z, float sx, float sy, float sz, float r, float g, float b) {
-        float[] mundo = puntoDelAuto(x, z); // Gira la posición local y le suma la posición del auto.
-        cajaGirada(mundo[0], y, mundo[1], sx, sy, sz, r, g, b, angulo); // Dibuja la pieza con la orientación del vehículo.
+        piezaEn(autoX, autoZ, angulo, x, y, z, sx, sy, sz, r, g, b); // Usa la posición y orientación del jugador.
+    }
+
+    /** Dibuja una pieza local (X a la derecha, Z hacia atrás) de cualquier vehículo ubicado en origen X, Z con un giro. */
+    protected void piezaEn(float origenX, float origenZ, float giro, float x, float y, float z, float sx, float sy, float sz, float r, float g, float b) {
+        float coseno = (float) Math.cos(giro); // Coseno de la orientación del vehículo.
+        float seno = (float) Math.sin(giro); // Seno de la misma orientación.
+        float mundoX = origenX + coseno * x + seno * z; // Gira y traslada el punto en X.
+        float mundoZ = origenZ - seno * x + coseno * z; // Gira y traslada el punto en Z.
+        cajaGirada(mundoX, y, mundoZ, sx, sy, sz, r, g, b, giro); // Dibuja la pieza con la orientación del vehículo.
     }
 
     /** Punto de entrada para ejecutar únicamente la segunda etapa. */

@@ -53,6 +53,75 @@ Incluye bibliotecas nativas para macOS Intel/Apple Silicon, Windows x64 y Linux 
   Usan un reloj propio (`relojCiudad`) que no se detiene al ganar.
 - **Minimapa** con la ciudad completa, el auto (posición y orientación), el destino activo y una **N** que marca el norte arriba.
 
+### 4. Condiciones técnicas
+- Se mantienen Java 17, Maven, LWJGL 3.3.3 y OpenGL 3.3.
+- Código organizado por responsabilidad (ver la tabla de abajo).
+- **deltaTime:** `clase1.loop()` mide los segundos entre cuadros (con tope de 50 ms). La conducción
+  (`clase2.mover()`), la transición día/noche, los semáforos, la fuente y el cronómetro se multiplican por deltaTime:
+  el auto recorre lo mismo a 30 o a 144 cuadros por segundo (hay un test que lo comprueba).
+- **Indicador en el título:** primero el estado y al final los controles, para que al achicar la ventana se recorten
+  las teclas y no la información. Se arma después de actualizar todas las etapas, se publica como máximo 10 veces
+  por segundo y solo si cambió. Usa solo caracteres ASCII.
+
+  ```text
+  Ciudad | 36 km/h | Barrio Sur | Noche | Faros ON | Entregas 0/4 -> Barrio Norte | 12 s   ||   WASD conducir - Espacio freno - ...
+  ```
+
+### 5. Tráfico autónomo (opcional)
+Tres vehículos recorren rutas cerradas por el **carril derecho**, giran en las esquinas y nunca salen de la calle:
+
+| Vehículo | Color | Velocidad | Ruta |
+|---|---|---|---|
+| Lamborghini Aventador | celeste `#87CEEB` | 10 u/s | anillo alrededor del Centro |
+| Ford Mustang (franjas negras) | amarillo | 8 u/s | recorrido con ocho giros por el norte, este y sur |
+| Suzuki Jimny (rueda de repuesto) | verde | 6 u/s | rectángulo hacia el Barrio Sur |
+
+- **Reserva de cruces:** solo un vehículo a la vez dentro de cada intersección; los demás esperan con luz de freno.
+- Mantienen distancia con el vehículo de delante y **se detienen si el jugador está en su carril**; el jugador no puede
+  atravesarlos (`puedeCircular()`).
+- Faros y luces de freno con halos de noche; marcas de color en el minimapa; **R** los devuelve a su inicio.
+- Todo el movimiento usa deltaTime (`avanzarTrafico()`), y se prueba sin ventana con una simulación de 200 s.
+
+### 6. Panel en la ventana (opcional)
+Recuadro semitransparente en la esquina inferior izquierda, que se adapta al tamaño de la ventana:
+- **Sector** actual en la fila superior.
+- **Velocidad** en números grandes (km/h, la misma que el título), aviso **REV** en reversa y una barra que pasa de
+  verde a amarillo y a rojo.
+- **Luces:** faros ON/OFF (F), noche o día (N), freno (se enciende al frenar) y minimapa ON/OFF (M).
+- Sin texturas ni librerías nuevas: usa la proyección ortográfica del minimapa en su propio `glViewport` y una
+  **fuente de píxeles de 3 × 5** (`FUENTE`) dibujada con las mismas cajas de toda la ciudad.
+
+### 7. Menú de inicio y pausa (opcional)
+- El juego **arranca en una portada** con la cámara girando alrededor de la ciudad: título, objetivo, opciones
+  `JUGAR` / `SALIR` y la **ayuda de controles**.
+- **P** pausa la partida: se congelan auto, tráfico, cronómetro y semáforos. El menú de pausa muestra el progreso
+  (entregas y tiempo), las opciones `CONTINUAR` / `REINICIAR` / `SALIR` y la misma ayuda.
+- Se navega con flechas (o W/S) y se elige con ENTER (o ESPACIO); P también continúa y ESC sale.
+- Se dibuja con la misma fuente de píxeles del panel, sobre la escena oscurecida, centrado y adaptado al tamaño de la ventana.
+
+### 8. Mejora urbana: carteles de sectores (opcional)
+- **Cuatro carteles de calle** en las avenidas que rodean el Centro: poste fino en la acera y tablero compacto
+  azul noche con marco claro, que sobresale un poco sobre la calzada (los vehículos pasan por debajo). Están a mitad de
+  cuadra, lejos de farolas y semáforos.
+- Cada cara muestra el **sector hacia el que vas** (CENTRO, BARRIO NORTE, BARRIO SUR, DISTRITO OESTE, DISTRITO ESTE),
+  con una **franja del color de las fachadas** de ese sector. Los nombres compuestos van en dos renglones, con la
+  fuente de píxeles del panel.
+- De noche el tablero queda **retroiluminado**: los faros no lo aclaran y el texto se lee nítido.
+- El panel suma una fila arriba con el **sector en el que estás** (`SECTOR: CENTRO`).
+
+## Organización por responsabilidad
+
+| Clase | Responsabilidad | Métodos principales |
+|---|---|---|
+| `clase1` | Ventana, ciclo con deltaTime, shaders, cubo compartido y mapa | `loop()`, `escena()`, `caja()`, `sector()`, `sectorEn()` |
+| `clase2` | **Conducción:** teclado, física, colisiones, cámara, modelo del auto e indicador | `actualizar()`, `mover()`, `puedeCircular()`, `textoIndicador()` |
+| `clase3` | **Iluminación:** día/noche, farolas, faros, halos y shader de luz | `crearFarolas()`, `prepararLuces()`, `efectosTransparentes()`, `fragmentShader()` |
+| `clase4` | **Funciones adicionales:** entregas, decoración, plaza central, semáforos, tráfico autónomo, minimapa, panel, menús y carteles de sectores | `actualizar()`, `decorarCiudad()`, `dibujarPlazaCentral()`, `faseSemaforo()`, `avanzarTrafico()`, `dibujarFrame()`, `dibujarPanel()`, `dibujarMenu()`, `dibujarCartel()` |
+
+Cada clase se comunica con la siguiente mediante ganchos vacíos que la siguiente sobrescribe (`estadoExtra()`,
+`controlesExtra()`, `prepararLuces()`, `efectosTransparentes()`, `halosAdicionales()`, `actualizarIndicador()`),
+así ninguna etapa modifica el código de otra.
+
 ## Cómo se acumulan los avances
 
 ```text
@@ -144,9 +213,11 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 | N | Día / noche | Clase 3 |
 | F | Encender / apagar faros | Clase 3 |
 | M | Mostrar / ocultar minimapa | Clase 4 |
+| P | Pausa (menú con continuar, reiniciar y salir) | Clase 4 |
+| Flechas / W S + ENTER | Elegir opción en los menús de inicio y pausa | Clase 4 |
 | ESC | Salir | Todas |
 
-El título de la ventana muestra velocidad en km/h (se supone una unidad = un metro), luces, entregas y tiempo. Puede truncarse si la ventana es pequeña. La velocidad máxima real es algo menor que el límite por la resistencia aplicada. Los semáforos son decorativos: cambian de color pero no bloquean al vehículo. No hay tráfico, peatones, audio, sombras, modelos importados ni ruedas animadas; este es el alcance del ejemplo didáctico finalizado.
+El título de la ventana muestra velocidad en km/h (se supone una unidad = un metro), sector actual, luces, entregas con el sector del destino y tiempo; los controles van al final, así que si la ventana es pequeña se recortan primero. La velocidad máxima real es algo menor que el límite por la resistencia aplicada. Los semáforos son decorativos: cambian de color pero no bloquean al vehículo. No hay peatones, audio, sombras, modelos importados ni ruedas animadas; este es el alcance del ejemplo didáctico finalizado.
 
 ## Verificación
 
@@ -154,7 +225,7 @@ El título de la ventana muestra velocidad en km/h (se supone una unidad = un me
 mvn test
 ```
 
-Las pruebas de lógica comprueban, sin abrir ventanas, el tamaño del mapa y la cantidad de edificios y parques, la variación de alturas y colores, que la red de calles esté conectada, que los destinos sean accesibles, la ubicación de las farolas en todos los sectores, la transición día/noche, los márgenes de colisión, el reinicio (incluidas las entregas), la secuencia de los semáforos, su ubicación en las aceras y la mezcla de especies de árboles. Para un arranque gráfico breve puede pasarse `-Ddemo.frames=6` a la **JVM del juego**; al llegar a ese número de cuadros la ventana se cierra. Esta prueba necesita pantalla y comprueba también compilación/enlace de shaders y errores OpenGL.
+Las pruebas de lógica comprueban, sin abrir ventanas, el tamaño del mapa y la cantidad de edificios y parques, la variación de alturas y colores, que la red de calles esté conectada, que los destinos sean accesibles, la ubicación de las farolas en todos los sectores, la transición día/noche, los márgenes de colisión, el reinicio (incluidas las entregas), la secuencia de los semáforos, su ubicación en las aceras y la mezcla de especies de árboles, las farolas de la plaza central, que el movimiento no dependa de los FPS, el formato del indicador el tráfico autónomo (tres modelos, siempre sobre la calle, girando, sin trabarse ni chocar), la fuente del panel, la velocidad en km/h y los menús (portada, pausa que congela el juego, reiniciar desde la pausa) y los carteles de sectores (nombran los cinco sectores, el texto cabe, poste en la acera). Para un arranque gráfico breve puede pasarse `-Ddemo.frames=6` a la **JVM del juego**; al llegar a ese número de cuadros la ventana se cierra. Esta prueba necesita pantalla y comprueba también compilación/enlace de shaders y errores OpenGL.
 
 Práctica manual: ejecutar cada etapa; conducir y chocar con una acera; retroceder; cambiar cámara; alternar N/F; redimensionar la ventana; alternar M; completar las cuatro entregas y reiniciar con R.
 

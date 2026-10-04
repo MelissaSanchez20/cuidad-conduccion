@@ -10,6 +10,7 @@ import static org.lwjgl.opengl.GL33.*; // Importa las funciones OpenGL hasta la 
 
 /**
  * CLASE 1: CREAR LA CIUDAD.
+ * Responsabilidad: ventana, ciclo con deltaTime, shaders, cubo compartido y mapa de la ciudad.
  * Sigue el flujo de los ejemplos: iniciar, loop, dibujar y limpiar.
  * Coordenadas: X = izquierda/derecha; Y = altura; Z = profundidad.
  * Las clases siguientes reutilizan esta base mediante extends y super.
@@ -118,6 +119,7 @@ public class clase1 {
             float deltaTime = (float) Math.min(tiempoActual - tiempoAnterior, 0.05); // Evita saltos de más de 50 ms.
             tiempoAnterior = tiempoActual; // Conserva el instante de este cuadro para la próxima vuelta.
             actualizar(deltaTime); // Actualiza cámara o conducción según la etapa ejecutada.
+            actualizarIndicador(deltaTime); // Publica el estado cuando todas las etapas ya se actualizaron.
             glfwGetFramebufferSize(ventana, anchoReal, altoReal); // Obtiene los píxeles reales, también en pantallas Retina.
             ancho = anchoReal[0]; // Copia el ancho actual al estado de la aplicación.
             alto = altoReal[0]; // Copia el alto actual al estado de la aplicación.
@@ -174,6 +176,11 @@ public class clase1 {
         }
     }
 
+    /** Reserva el punto donde clase2 actualiza el indicador del título; se llama después de actualizar(). */
+    protected void actualizarIndicador(float deltaTime) {
+        // No necesita instrucciones en clase1: el título es fijo.
+    }
+
     /** Coloca la cámara elevada y orientada hacia el centro de la ciudad. */
     protected void configurarCamara() {
         float radio = LIMITE * 2.0f; // Aleja la órbita en proporción al tamaño de la ciudad.
@@ -213,6 +220,21 @@ public class clase1 {
             return 3; // Devuelve el índice del Distrito Oeste.
         }
         return 4; // Lo que queda a la derecha es el Distrito Este.
+    }
+
+    /** Indica el sector de una posición del mundo, convirtiéndola primero en fila y columna del mapa. */
+    protected static int sectorEn(float x, float z) {
+        int ultima = MAPA.length - 1; // Índice de la última fila y columna.
+        int columna = (int) Math.floor((x + LIMITE) / CELDA); // Celda que contiene la coordenada X.
+        int fila = (int) Math.floor((z + LIMITE) / CELDA); // Celda que contiene la coordenada Z.
+        columna = Math.max(0, Math.min(ultima, columna)); // Mantiene el índice dentro del mapa.
+        fila = Math.max(0, Math.min(ultima, fila)); // Mantiene el índice dentro del mapa.
+        return sector(fila, columna); // Reutiliza la división de sectores de las manzanas.
+    }
+
+    /** Devuelve una copia del color base RGB de un sector (lo usan los carteles de clase4). */
+    protected static float[] colorSector(int indice) {
+        return COLOR_SECTOR[indice].clone(); // Copia: nadie puede modificar la tabla original.
     }
 
     /** Calcula la altura de un edificio según su sector, siempre igual para la misma celda. */

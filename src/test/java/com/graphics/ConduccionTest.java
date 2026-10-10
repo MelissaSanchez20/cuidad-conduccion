@@ -239,26 +239,35 @@ public class ConduccionTest extends TestCase {
         assertEquals(rapido.autoX, lento.autoX, 0.001f); // Ninguno se desvió.
     }
 
-    /** Comprueba que el título muestra primero el estado (velocidad, sector, entregas, tiempo) y después los controles. */
+    /** Comprueba que el título de clase3 muestra primero el estado (velocidad, sector, luces) y después los controles. */
     public void testIndicadorLegible() {
-        clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
+        clase3 juego = new clase3(); // Etapa sin panel: el título es su único indicador.
         juego.velocidad = 10; // 36 km/h.
         String titulo = juego.textoIndicador(); // Arma el texto sin abrir ventana.
         int controles = titulo.indexOf("||"); // Separador entre estado y controles.
         assertTrue(controles > 0); // Existe la parte de controles.
         assertTrue(titulo.indexOf("36 km/h") < controles); // La velocidad está en el estado.
         assertTrue(titulo.indexOf("Barrio Sur") < controles); // El auto parte en el Barrio Sur.
-        assertTrue(titulo.indexOf("Entregas 0/4 -> Barrio Norte") < controles); // Progreso y sector del destino.
-        assertTrue(titulo.indexOf("0 s") < controles); // Tiempo de la partida.
-        assertTrue(titulo.indexOf("M mapa") > controles); // Las teclas van al final.
+        assertTrue(titulo.indexOf("F faros") > controles); // Las teclas van al final.
         for (char letra : titulo.toCharArray()) { // Revisa cada carácter del título.
             assertTrue(letra < 128); // Solo ASCII: se ve bien con cualquier codificación.
         }
     }
 
+    /** Comprueba que el título de clase4 es corto: nombre del juego y estado de la partida, sin controles. */
+    public void testIndicadorJuego() {
+        clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
+        assertEquals("Luces de Neon | MENU", juego.textoIndicador()); // Portada.
+        juego.estado = clase4.JUGANDO; // Empieza la partida.
+        assertEquals("Luces de Neon | Entregas 0/4", juego.textoIndicador()); // Progreso.
+        juego.estado = clase4.PAUSA; // Pausa.
+        assertEquals("Luces de Neon | PAUSA | Entregas 0/4", juego.textoIndicador()); // Pausa y progreso.
+    }
+
     /** Comprueba el texto de victoria del título. */
     public void testIndicadorVictoria() {
         clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
+        juego.estado = clase4.JUGANDO; // Partida en curso.
         juego.entregas = clase4.DESTINOS.length; // Simula todas las entregas hechas.
         juego.tiempo = 83.7f; // Tiempo final.
         String titulo = juego.textoIndicador(); // Arma el texto.
@@ -324,14 +333,16 @@ public class ConduccionTest extends TestCase {
         assertEquals(15f, clase4.anchoTexto("KM/H", 1), 0f); // Cuatro caracteres de 3 más 3 separaciones.
     }
 
-    /** Comprueba que el panel y el título muestran la misma velocidad en km/h, también en reversa. */
+    /** Comprueba que el panel y el título de clase3 muestran la misma velocidad en km/h, también en reversa. */
     public void testKilometrosPorHora() {
         clase4 juego = new clase4(); // Crea la versión final sin inicializar OpenGL.
         juego.velocidad = 10; // 10 m/s.
         assertEquals(36, juego.kilometrosPorHora()); // 36 km/h.
         juego.velocidad = -5; // Reversa a 5 m/s.
         assertEquals(18, juego.kilometrosPorHora()); // Se muestra sin signo.
-        assertTrue(juego.textoIndicador().contains("18 km/h")); // El título usa el mismo valor.
+        clase3 etapa = new clase3(); // Etapa que muestra la velocidad en el título.
+        etapa.velocidad = -5; // Misma reversa.
+        assertTrue(etapa.textoIndicador().contains("18 km/h")); // El título usa el mismo valor.
     }
 
     /** Comprueba la portada: empieza en el menú, la selección es circular y ENTER sobre JUGAR empieza la partida. */
@@ -381,7 +392,7 @@ public class ConduccionTest extends TestCase {
         textos.addAll(java.util.Arrays.asList(clase4.OPCIONES_INICIO)); // Opciones de la portada.
         textos.addAll(java.util.Arrays.asList(clase4.OPCIONES_PAUSA)); // Opciones de la pausa.
         textos.add(clase4.PIE_MENU); // Pie del menú.
-        textos.add("CIUDAD OPENGL CONDUCE Y COMPLETA 4 ENTREGAS PAUSA GANASTE EN TIEMPO S CONTROLES >"); // Títulos.
+        textos.add("LUCES DE NEON CONDUCE Y COMPLETA 4 ENTREGAS PAUSA GANASTE EN TIEMPO S CONTROLES >"); // Títulos.
         for (String texto : textos) { // Revisa cada texto.
             for (char letra : texto.toCharArray()) { // Y cada carácter.
                 assertTrue("Falta " + letra, clase4.FUENTE.containsKey(letra)); // Existe en la fuente.

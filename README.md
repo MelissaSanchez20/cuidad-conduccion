@@ -59,12 +59,15 @@ Incluye bibliotecas nativas para macOS Intel/Apple Silicon, Windows x64 y Linux 
 - **deltaTime:** `clase1.loop()` mide los segundos entre cuadros (con tope de 50 ms). La conducción
   (`clase2.mover()`), la transición día/noche, los semáforos, la fuente y el cronómetro se multiplican por deltaTime:
   el auto recorre lo mismo a 30 o a 144 cuadros por segundo (hay un test que lo comprueba).
-- **Indicador en el título:** primero el estado y al final los controles, para que al achicar la ventana se recorten
-  las teclas y no la información. Se arma después de actualizar todas las etapas, se publica como máximo 10 veces
-  por segundo y solo si cambió. Usa solo caracteres ASCII.
+- **Indicador en el título:** en clase2 y clase3 (que no tienen panel en pantalla) muestra primero el estado y al
+  final los controles, para que al achicar la ventana se recorten las teclas y no la información. En clase4 el título
+  es solo el nombre del juego y el estado de la partida, porque la velocidad ya está en el panel y los controles en el
+  menú. Se arma después de actualizar todas las etapas, se publica como máximo 10 veces por segundo y solo si cambió.
+  Usa solo caracteres ASCII.
 
   ```text
-  Ciudad | 36 km/h | Barrio Sur | Noche | Faros ON | Entregas 0/4 -> Barrio Norte | 12 s   ||   WASD conducir - Espacio freno - ...
+  clase3:  Ciudad | 36 km/h | Barrio Sur | Noche | Faros ON   ||   WASD conducir - Espacio freno - ...
+  clase4:  Luces de Neon | Entregas 0/4
   ```
 
 ### 5. Tráfico autónomo (opcional)

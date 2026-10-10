@@ -98,30 +98,23 @@ public class clase4 extends clase3 {
         }
     }
 
-    /** Compone el progreso que se añade al título de la ventana. */
-    @Override // Amplía los indicadores de día/noche y faros de clase3.
-    protected String estadoExtra() {
-        String mensaje = super.estadoExtra(); // Recupera los indicadores de iluminación.
+    /**
+     * Título corto de la ventana: nombre del juego y estado de la partida. La velocidad y los
+     * controles ya se ven en el panel y en el menú, así que no se repiten aquí.
+     */
+    @Override // Reemplaza el indicador largo de clase2/clase3.
+    protected String textoIndicador() {
+        String titulo = "Luces de Neon"; // Nombre del juego.
         if (estado == INICIO) { // Portada.
-            mensaje += " | MENU"; // Indica que el juego no empezó.
-        } else if (estado == PAUSA) { // Juego detenido.
-            mensaje += " | PAUSA"; // Indica la pausa.
+            return titulo + " | MENU"; // El juego no empezó.
         }
-        if (entregas == DESTINOS.length) { // Selecciona el texto de victoria al completar todas las paradas.
-            mensaje += " | GANASTE en " + (int) tiempo + " s - R para jugar otra vez"; // Tiempo final y opción de reinicio.
-        } else { // Durante el recorrido muestra progreso y destino.
-            float[] destino = DESTINOS[entregas]; // Parada activa.
-            mensaje += " | Entregas " + entregas + "/" + DESTINOS.length; // Indica cuántas paradas se completaron.
-            mensaje += " -> " + SECTORES[sectorEn(destino[0], destino[1])]; // Sector al que hay que ir.
-            mensaje += " | " + (int) tiempo + " s"; // Tiempo de la partida.
+        if (estado == PAUSA) { // Juego detenido.
+            titulo += " | PAUSA"; // Indica la pausa.
         }
-        return mensaje; // Entrega el texto a textoIndicador() de clase2.
-    }
-
-    /** Añade la tecla del minimapa y cómo completar una entrega. */
-    @Override // Amplía los controles de clase3.
-    protected String controlesExtra() {
-        return super.controlesExtra() + " - M mapa - P pausa - Frena en la marca dorada para entregar"; // Tecla M e instrucción.
+        if (entregas == DESTINOS.length) { // Todas las paradas completadas.
+            return titulo + " | GANASTE en " + (int) tiempo + " s"; // Tiempo final.
+        }
+        return titulo + " | Entregas " + entregas + "/" + DESTINOS.length; // Progreso de la partida.
     }
 
     // ==================== 4. ESCENA FINAL Y DESTINO ====================
@@ -1256,7 +1249,7 @@ public class clase4 extends clase3 {
             rectanguloTranslucido(0, 0, MENU_ANCHO, MENU_ALTO, 0.03f, 0.05f, 0.09f, 0.88f); // Fondo del menú.
             marco(3, 0.6f); // Borde claro.
             if (estado == INICIO) { // Portada.
-                textoCentrado("CIUDAD OPENGL", 266, 6, 1, 0.85f, 0.3f); // Título grande.
+                textoCentrado("LUCES DE NEON", 266, 6, 1, 0.85f, 0.3f); // Título grande.
                 textoCentrado("CONDUCE Y COMPLETA " + DESTINOS.length + " ENTREGAS", 244, 2, 0.75f, 0.8f, 0.9f); // Objetivo.
             } else { // Pausa.
                 textoCentrado("PAUSA", 266, 6, 1, 0.85f, 0.3f); // Título grande.

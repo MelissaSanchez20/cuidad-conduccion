@@ -7,13 +7,14 @@ Proyecto de enseñanza basado en `AppCamara.java` y `AppLaberinto.java` de tus c
 Abre una terminal **en esta carpeta**, donde está `pom.xml`. Necesitas un JDK 17 o superior y Maven (`java -version`, `mvn -version`). La primera compilación descarga las dependencias.
 
 ```sh
-mvn compile exec:exec -DmainClass=com.graphics.clase1
-mvn compile exec:exec -DmainClass=com.graphics.clase2
-mvn compile exec:exec -DmainClass=com.graphics.clase3
-mvn compile exec:exec -DmainClass=com.graphics.clase4
+mvn compile exec:exec "-DmainClass=com.graphics.clase1"
+mvn compile exec:exec "-DmainClass=com.graphics.clase2"
+mvn compile exec:exec "-DmainClass=com.graphics.clase3"
+mvn compile exec:exec "-DmainClass=com.graphics.clase4"
 ```
 
-Ejecuta un comando por vez; ESC cierra la ventana. `mvn compile exec:exec` abre la versión final por defecto. En macOS, el perfil Maven agrega `-XstartOnFirstThread`. Si ejecutas desde un IDE en Mac, agrega ese argumento a las opciones de la JVM. Usa `exec:exec`, porque `exec:java` no inicia el proceso de esa forma.
+Las comillas son necesarias en PowerShell: sin ellas corta el argumento en el primer punto y Maven responde
+`Unknown lifecycle phase ".graphics.clase4"`. Ejecuta un comando por vez; ESC cierra la ventana. `mvn compile exec:exec` abre la versión final por defecto. En macOS, el perfil Maven agrega `-XstartOnFirstThread`. Si ejecutas desde un IDE en Mac, agrega ese argumento a las opciones de la JVM. Usa `exec:exec`, porque `exec:java` no inicia el proceso de esa forma.
 
 Incluye bibliotecas nativas para macOS Intel/Apple Silicon, Windows x64 y Linux x64/ARM64. Se necesita una sesión gráfica y un controlador compatible con OpenGL 3.3. No está diseñado para ejecutarse en un servidor sin pantalla.
 

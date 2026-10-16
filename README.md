@@ -29,28 +29,23 @@ Incluye bibliotecas nativas para macOS Intel/Apple Silicon, Windows x64 y Linux 
 - El auto parte de la esquina suroeste (-50, 50) y hay **4 entregas** sobre calles de sectores distintos.
 
 ### 2. Iluminación
-- **21 farolas** generadas automáticamente junto a las intersecciones (patrón de tablero de ajedrez), con base,
-  poste, brazo sobre la calle y bombilla. Su luz se atenúa con la distancia y forma charcos de luz cálida.
+- **21 farolas** generadas automáticamente junto a las intersecciones (patrón de tablero de ajedrez), con poste,
+  brazo en forma de L y bombilla. Su luz se atenúa con la distancia y forma charcos de luz cálida.
 - **Transición suave día/noche** con N: luz ambiente, sol/luna, farolas y cielo cambian gradualmente.
-- Ambiente hemisférico (las caras que miran al cielo reciben más luz), sol cálido y luna azulada.
-- Reflejos especulares Blinn-Phong y niebla atmosférica que funde lo lejano con el cielo.
+- Luz ambiente más luz difusa del sol (de día) o de la luna (de noche), calculada con las normales.
 - Dos **faros spotlight** con cono suave y alcance limitado (se apagan entre 20 y 28 unidades).
-- Halos de luz (billboard con mezcla aditiva) en farolas, faros y luces traseras; **luces de freno** al frenar.
+- **Luces de freno** al frenar.
 - Las bombillas usan emisión propia; el entorno recibe la luz calculada en el shader.
 
 ### 3. Funciones urbanas
-- **Parques estilo jardín japonés:** mezcla de **sakura** (`#FF69B4`), **tajibo blanco** (`#FDFBF7`) y árbol verde común,
-  con pétalos caídos bajo los árboles en flor, sendero de losas (tobi-ishi), **linterna de piedra (tōrō)** que se
-  enciende de noche dos **bancos japoneses** de listones de madera sobre bloques de piedra, **arbustos** (algunos con flores rosadas),
-  **basureros** octogonales y un **bebedero**. El césped es verde lechuga (`#8CC63F`).
-- **Plaza central** (parque del centro, en (0, 0)): piso de piedra, **fuente de agua** de tres niveles con chorro y
-  cascadas animadas (de noche el agua se ilumina), **4 iluminarias** de jardín con halos nocturnos, 4 bancos mirando
-  a la fuente, sakuras y tajibos en diagonal, arbustos con flores rosadas y blancas y una farola de calle en cada esquina.
-- **Auto** estilo Mitsubishi Lancer Evolution X en **fucsia** (`#FF00FF`): parrilla negra trapezoidal, tomas de aire en
-  el capó, alerón trasero, faldones, espejos, escape y llantas, todo hecho con cajas.
+- **Parques:** cuatro árboles por parque que mezclan **sakura** (`#FF69B4`), **tajibo blanco** (`#FDFBF7`) y árbol
+  verde común (tronco + copa), y un **banco** de madera en el centro. El césped es verde lechuga (`#8CC63F`).
+- **Plaza central** (parque del centro, en (0, 0)): piso de piedra, **fuente** sencilla (pileta, columna y chorro; de noche
+  el agua se ilumina), **4 faroles** que se encienden de noche, 4 bancos, sakuras y tajibos y una farola de calle en cada esquina.
+- **Auto** sencillo en **fucsia** (`#FF00FF`): carrocería, cabina azulada, cuatro ruedas, faros y luces traseras, todo hecho con cajas.
 - **Ventanas:** vidrio oscuro de día; de noche unas habitaciones encendidas y otras apagadas (patrón fijo por edificio).
 - **Pasos peatonales** en ambos extremos de cada tramo de calle, junto a los cruces, con franjas paralelas al tráfico.
-- **18 semáforos** en las esquinas sin farola, con dos cabezales de fases opuestas (rojo → verde → amarillo, ciclo de 12 s).
+- **18 semáforos** en las esquinas sin farola, con dos cabezales sencillos de fases opuestas (rojo → verde → amarillo, ciclo de 12 s).
   Usan un reloj propio (`relojCiudad`) que no se detiene al ganar.
 - **Minimapa** con la ciudad completa, el auto (posición y orientación), el destino activo y una **N** que marca el norte arriba.
 
@@ -76,14 +71,14 @@ Tres vehículos recorren rutas cerradas por el **carril derecho**, giran en las 
 
 | Vehículo | Color | Velocidad | Ruta |
 |---|---|---|---|
-| Lamborghini Aventador | celeste `#87CEEB` | 10 u/s | anillo alrededor del Centro |
-| Ford Mustang (franjas negras) | amarillo | 8 u/s | recorrido con ocho giros por el norte, este y sur |
-| Suzuki Jimny (rueda de repuesto) | verde | 6 u/s | rectángulo hacia el Barrio Sur |
+| Auto sencillo | celeste `#87CEEB` | 10 u/s | anillo alrededor del Centro |
+| Auto sencillo | amarillo | 8 u/s | recorrido con ocho giros por el norte, este y sur |
+| Auto sencillo | verde | 6 u/s | rectángulo hacia el Barrio Sur |
 
 - **Reserva de cruces:** solo un vehículo a la vez dentro de cada intersección; los demás esperan con luz de freno.
 - Mantienen distancia con el vehículo de delante y **se detienen si el jugador está en su carril**; el jugador no puede
   atravesarlos (`puedeCircular()`).
-- Faros y luces de freno con halos de noche; marcas de color en el minimapa; **R** los devuelve a su inicio.
+- Faros y luces de freno; marcas de color en el minimapa; **R** los devuelve a su inicio.
 - Todo el movimiento usa deltaTime (`avanzarTrafico()`), y se prueba sin ventana con una simulación de 200 s.
 
 ### 6. Panel en la ventana (opcional)
@@ -119,11 +114,11 @@ Recuadro semitransparente en la esquina inferior izquierda, que se adapta al tam
 |---|---|---|
 | `clase1` | Ventana, ciclo con deltaTime, shaders, cubo compartido y mapa | `loop()`, `escena()`, `caja()`, `sector()`, `sectorEn()` |
 | `clase2` | **Conducción:** teclado, física, colisiones, cámara, modelo del auto e indicador | `actualizar()`, `mover()`, `puedeCircular()`, `textoIndicador()` |
-| `clase3` | **Iluminación:** día/noche, farolas, faros, halos y shader de luz | `crearFarolas()`, `prepararLuces()`, `efectosTransparentes()`, `fragmentShader()` |
+| `clase3` | **Iluminación:** día/noche, farolas, faros y shader de luz | `crearFarolas()`, `prepararLuces()`, `fragmentShader()` |
 | `clase4` | **Funciones adicionales:** entregas, decoración, plaza central, semáforos, tráfico autónomo, minimapa, panel, menús y carteles de sectores | `actualizar()`, `decorarCiudad()`, `dibujarPlazaCentral()`, `faseSemaforo()`, `avanzarTrafico()`, `dibujarFrame()`, `dibujarPanel()`, `dibujarMenu()`, `dibujarCartel()` |
 
 Cada clase se comunica con la siguiente mediante ganchos vacíos que la siguiente sobrescribe (`estadoExtra()`,
-`controlesExtra()`, `prepararLuces()`, `efectosTransparentes()`, `halosAdicionales()`, `actualizarIndicador()`),
+`controlesExtra()`, `prepararLuces()`, `actualizarIndicador()`),
 así ninguna etapa modifica el código de otra.
 
 ## Cómo se acumulan los avances
@@ -165,7 +160,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 
 ### Clase 2 — Crear y mover el auto
 
-**Resultado:** auto fucsia estilo Lancer Evo X con cabina, alerón, ruedas y faros, cámara de seguimiento y colisiones con manzanas y borde.
+**Resultado:** auto fucsia sencillo con cabina, ruedas y faros, cámara de seguimiento y colisiones con manzanas y borde.
 
 1. Leer `dibujarAuto()` y `pieza()`: las piezas usan coordenadas locales que giran y se trasladan juntas.
 2. Estudiar `actualizar(deltaTime)`: aceleración, resistencia, freno y límites de velocidad.
@@ -178,7 +173,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 
 ### Clase 3 — Focos e iluminación
 
-**Resultado:** ambiente nocturno, veintiún farolas que iluminan superficies, faros del vehículo con alcance limitado, halos de luz, luces de freno y transición suave día/noche.
+**Resultado:** ambiente nocturno, veintiún farolas que iluminan superficies, faros del vehículo con alcance limitado, luces de freno y transición suave día/noche.
 
 1. Comparar el shader de color plano de clase1 con `fragmentShader()` de clase3.
 2. Estudiar normales y Lambert: `max(dot(normal, direccionLuz), 0)`.
@@ -194,7 +189,7 @@ Se usa una instrucción por línea, condiciones con llaves y cálculos intermedi
 
 **Resultado:** parques estilo japonés (sakura, tajibo blanco, bancos y tōrō), ventanas iluminadas, pasos peatonales en los cruces, semáforos animados, minimapa y juego de cuatro entregas.
 
-1. Estudiar `decorarCiudad()` y sus métodos `dibujarParque()` (con `dibujarArbol()`, `dibujarBanco()` y `dibujarToro()`), `dibujarVentanas()`, `dibujarPasosPeatonales()` y `dibujarSemaforo()`: composición de objetos reutilizando cajas y la matriz.
+1. Estudiar `decorarCiudad()` y sus métodos `dibujarParque()` (con `dibujarArbol()`, `dibujarBanco()`, `dibujarFuente()` y `dibujarIluminaria()`), `dibujarVentanas()`, `dibujarPasosPeatonales()` y `dibujarSemaforo()`: composición de objetos reutilizando cajas y la matriz.
 2. Leer `DESTINOS` y `actualizar()`: acercarse a menos de 3 unidades y frenar a menos de 1 unidad/segundo completa una entrega.
 3. Seguir `dibujarFrame()`: primero la cámara principal, después una vista ortográfica en otro viewport.
 4. Explicar `glScissor`: permite borrar solo el recuadro del minimapa y su profundidad.

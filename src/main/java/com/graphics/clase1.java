@@ -23,8 +23,8 @@ public class clase1 {
     protected int programa; // Identificador del programa que une ambos shaders.
     protected int vao; // Identificador del VAO: describe cómo leer los vértices.
     protected int vbo; // Identificador del VBO: contiene los vértices en la GPU.
-    protected int ancho = 1100; // Ancho inicial de la ventana; después contiene píxeles del framebuffer.
-    protected int alto = 760; // Alto inicial de la ventana; después contiene píxeles del framebuffer.
+    protected int ancho = 1100; // Ancho de la ventana en píxeles.
+    protected int alto = 760; // Alto de la ventana en píxeles.
     protected float orbita = 0.6f; // Ángulo inicial de la cámara alrededor de la ciudad, en radianes.
     protected boolean vistaMapa = false; // Clase4 lo activa cuando dibuja la vista superior.
     protected static final float LIMITE = 55; // Distancia del origen a cada borde: el mapa mide 110 unidades.
@@ -68,10 +68,10 @@ public class clase1 {
     public void run() {
         GLFWErrorCallback errores = GLFWErrorCallback.createPrint(System.err); // Prepara mensajes de error en consola.
         errores.set(); // Instala el manejador de errores de GLFW.
-        try { // Protege el arranque y el ciclo para poder liberar recursos si fallan.
+        try { // Si algo falla, igual se liberan los recursos.
             iniciar(); // Crea la ventana, los shaders y la geometría.
             loop(); // Actualiza y dibuja hasta que se cierre la ventana.
-        } finally { // Este bloque se ejecuta tanto al salir normalmente como al fallar.
+        } finally { // Se ejecuta siempre al salir.
             limpiar(); // Libera la GPU, los callbacks y la ventana.
             glfwSetErrorCallback(null); // Desconecta el manejador antes de liberar su memoria.
             errores.free(); // Libera el callback de errores.
@@ -80,7 +80,7 @@ public class clase1 {
 
     /** Configura GLFW y OpenGL, igual que las clases de cámara del proyecto original. */
     private void iniciar() {
-        if (!glfwInit()) { // Intenta iniciar la biblioteca que administra ventanas y entrada.
+        if (!glfwInit()) { // Inicia GLFW (ventanas y teclado).
             throw new IllegalStateException("No se pudo iniciar GLFW"); // Detiene el arranque si GLFW falla.
         }
         glfwDefaultWindowHints(); // Restablece las opciones de ventana antes de personalizarlas.
@@ -93,22 +93,22 @@ public class clase1 {
             throw new IllegalStateException("No se pudo crear la ventana OpenGL"); // Informa el fallo de creación.
         }
         glfwMakeContextCurrent(ventana); // Selecciona la ventana que recibirá las llamadas OpenGL.
-        glfwSwapInterval(1); // Sincroniza la presentación con la pantalla para reducir cortes de imagen.
+        glfwSwapInterval(1); // Activa VSync.
         GL.createCapabilities(); // Carga las funciones OpenGL del contexto actual.
         glEnable(GL_DEPTH_TEST); // Hace que las superficies cercanas oculten las lejanas.
         glfwSetKeyCallback(ventana, (ventanaEvento, key, scancode, action, mods) -> { // Registra la función que recibe eventos de teclado.
-            if (action == GLFW_PRESS) { // Responde una sola vez al presionar, no a las repeticiones de la tecla.
-                tecla(key); // Entrega la tecla al método que cada lección puede ampliar.
+            if (action == GLFW_PRESS) { // Solo al presionar la tecla.
+                tecla(key); // Cada clase puede agregar teclas.
             }
         }); // Termina el registro del callback de teclado.
-        crearPrograma(); // Compila y enlaza los shaders que transforman y colorean los vértices.
-        crearCubo(); // Guarda en la GPU el cubo que servirá para todos los objetos.
+        crearPrograma(); // Crea los shaders.
+        crearCubo(); // Crea el cubo que usan todos los objetos.
     }
 
     /** Mantiene el ciclo continuo de eventos, actualización, dibujo y presentación. */
     private void loop() {
         double tiempoAnterior = glfwGetTime(); // Guarda el instante inicial para calcular el tiempo entre cuadros.
-        int cuadros = 0; // Cuenta los cuadros dibujados para la comprobación automática opcional.
+        int cuadros = 0; // Cuadros dibujados (para la prueba).
         int maxCuadros = Integer.getInteger("demo.frames", 0); // Cero permite jugar; otro valor limita el arranque de prueba.
         int[] anchoReal = new int[1]; // Reserva espacio para que GLFW escriba el ancho en píxeles.
         int[] altoReal = new int[1]; // Reserva espacio para que GLFW escriba el alto en píxeles.
@@ -119,11 +119,11 @@ public class clase1 {
             float deltaTime = (float) Math.min(tiempoActual - tiempoAnterior, 0.05); // Evita saltos de más de 50 ms.
             tiempoAnterior = tiempoActual; // Conserva el instante de este cuadro para la próxima vuelta.
             actualizar(deltaTime); // Actualiza cámara o conducción según la etapa ejecutada.
-            actualizarIndicador(deltaTime); // Publica el estado cuando todas las etapas ya se actualizaron.
+            actualizarIndicador(deltaTime); // Actualiza el título de la ventana.
             glfwGetFramebufferSize(ventana, anchoReal, altoReal); // Obtiene los píxeles reales, también en pantallas Retina.
             ancho = anchoReal[0]; // Copia el ancho actual al estado de la aplicación.
             alto = altoReal[0]; // Copia el alto actual al estado de la aplicación.
-            if (ancho > 0 && alto > 0) { // Evita dibujar y dividir por cero cuando la ventana está minimizada.
+            if (ancho > 0 && alto > 0) { // No dibuja si la ventana está minimizada.
                 dibujarFrame(); // Genera la imagen de la ciudad para este cuadro.
             }
             glfwSwapBuffers(ventana); // Muestra la imagen terminada intercambiando los buffers.
@@ -193,7 +193,7 @@ public class clase1 {
 
     /** Reserva el punto en el que clase3 enviará las luces a la GPU. */
     protected void prepararLuces() {
-        // No necesita instrucciones en clase1: el shader inicial utiliza colores planos.
+        // En clase1 no hay luces.
     }
 
     // ==================== 4. CIUDAD A PARTIR DE UNA MATRIZ ====================
@@ -259,21 +259,14 @@ public class clase1 {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Borra la imagen y las distancias del cuadro anterior.
         glUseProgram(programa); // Activa los shaders de esta etapa.
         glBindVertexArray(vao); // Selecciona los atributos del cubo compartido.
-        entero("uMapa", 0); // Selecciona perspectiva normal, no la proyección del minimapa.
-        decimal("uEscalaMapa", LIMITE + 2); // Informa al shader qué mitad de mapa debe caber en el minimapa.
-        entero("uBrillo", 0); // Dibuja cajas normales, no halos de luz.
+        entero("uMapa", 0); // Vista normal, no minimapa.
+        decimal("uEscalaMapa", LIMITE + 2); // Tamaño del mapa para el minimapa.
         configurarCamara(); // Actualiza la posición y el objetivo de la cámara.
         prepararLuces(); // Envía iluminación si la etapa actual la implementa.
         escena(); // Dibuja la ciudad y las ampliaciones de la lección actual.
-        efectosTransparentes(); // Dibuja al final los efectos semitransparentes, como los halos de luz.
         if (glGetError() != GL_NO_ERROR) { // Comprueba si OpenGL reportó una operación inválida.
             throw new IllegalStateException("Error OpenGL al dibujar"); // Hace visible el problema en consola.
         }
-    }
-
-    /** Reserva el punto donde clase3 dibuja los halos de las luces, después de todos los objetos sólidos. */
-    protected void efectosTransparentes() {
-        // No necesita instrucciones en clase1: todavía no hay luces que brillen.
     }
 
     /** Devuelve el color RGB del cielo; clase3 lo reemplaza según el ambiente. */
@@ -340,9 +333,9 @@ public class clase1 {
     protected int uniform(String nombre) {
         if (!uniforms.containsKey(nombre)) { // Revisa si esta variable todavía no fue localizada.
             int ubicacion = glGetUniformLocation(programa, nombre); // Pregunta a OpenGL por la dirección del uniform.
-            uniforms.put(nombre, ubicacion); // Guarda la respuesta; -1 significa que el shader no usa esa variable.
+            uniforms.put(nombre, ubicacion); // Guarda la ubicación para no buscarla otra vez.
         }
-        return uniforms.get(nombre); // Recupera la ubicación guardada; OpenGL ignora envíos a -1.
+        return uniforms.get(nombre); // Usa la ubicación guardada.
     }
 
     /** Envía tres números reales a una variable vec3 del shader. */
@@ -375,12 +368,10 @@ public class clase1 {
             uniform vec3 uObjetivo; // Recibe el punto que observa la cámara.
             uniform float uGiro; // Recibe el giro del objeto alrededor de Y.
             uniform float uAspecto; // Recibe la relación ancho/alto de la imagen.
-            uniform int uMapa; // Selecciona perspectiva (0) o vista superior ortográfica (1).
-            uniform float uEscalaMapa; // Recibe la distancia del centro al borde visible del minimapa.
-            uniform int uBrillo; // Vale 1 para dibujar un halo que siempre mira a la cámara (clase3).
+            uniform int uMapa; // 0 vista normal, 1 minimapa desde arriba.
+            uniform float uEscalaMapa; // Tamaño visible del minimapa.
             out vec3 vMundo; // Envía la posición mundial al shader de fragmentos.
-            out vec3 vNormal; // Envía la normal transformada para la iluminación de clase3.
-            out vec3 vLocal; // Envía la posición dentro del cubo, de -0.5 a 0.5, para dibujar halos redondos.
+            out vec3 vNormal; // Normal para la luz de clase3.
 
             void main() { // OpenGL ejecuta este bloque una vez por vértice.
                 float coseno = cos(uGiro); // Calcula el coseno del giro del objeto.
@@ -391,8 +382,7 @@ public class clase1 {
                     seno, 0.0, coseno // Tercera columna: dirección del eje Z rotado.
                 ); // Completa la matriz de tres filas y tres columnas.
                 vMundo = giro * (aPos * uEscala) + uPos; // Escala, gira y traslada el vértice al mundo.
-                vNormal = normalize(giro * (aNormal / uEscala)); // Corrige la normal con la inversa transpuesta de escala y giro.
-                vLocal = aPos; // Conserva la posición local del vértice.
+                vNormal = normalize(giro * (aNormal / uEscala)); // Gira la normal igual que la caja.
 
                 if (uMapa == 1) { // Esta rama se usa al dibujar el minimapa en clase4.
                     float pantallaX = vMundo.x / uEscalaMapa; // Ajusta el ancho del mundo al intervalo visible -1 a 1.
@@ -403,17 +393,14 @@ public class clase1 {
                     vec3 frente = normalize(uObjetivo - uOjo); // Calcula la dirección hacia la que mira la cámara.
                     vec3 derecha = normalize(cross(frente, vec3(0.0, 1.0, 0.0))); // Obtiene el eje horizontal de la cámara.
                     vec3 arriba = cross(derecha, frente); // Obtiene el eje vertical perpendicular a los otros dos.
-                    if (uBrillo == 1) { // Un halo es un cuadrado plano que siempre mira a la cámara (billboard).
-                        vMundo = uPos + derecha * (aPos.x * uEscala.x) + arriba * (aPos.y * uEscala.y); // Lo orienta con los ejes de la cámara.
-                    }
                     vec3 diferencia = vMundo - uOjo; // Traslada el origen del mundo hasta la cámara.
                     float vistaX = dot(diferencia, derecha); // Mide cuánto está el vértice a la derecha de la cámara.
                     float vistaY = dot(diferencia, arriba); // Mide cuánto está el vértice encima de la cámara.
                     float vistaZ = -dot(diferencia, frente); // Usa Z negativa delante de la cámara, como espera OpenGL.
-                    float factor = 1.0 / tan(radians(55.0) * 0.5); // Convierte el campo visual de 55 grados en escala de perspectiva.
+                    float factor = 1.0 / tan(radians(55.0) * 0.5); // Ángulo de visión de 55 grados.
                     float cerca = 0.1; // Define la distancia mínima visible.
-                    float lejos = 300.0; // Define la distancia máxima visible; alcanza toda la ciudad ampliada.
-                    float clipX = vistaX * factor / uAspecto; // Corrige la coordenada horizontal según el ancho de la pantalla.
+                    float lejos = 300.0; // Distancia máxima visible.
+                    float clipX = vistaX * factor / uAspecto; // Corrige según el ancho de la ventana.
                     float clipY = vistaY * factor; // Aplica el campo visual a la coordenada vertical.
                     float clipZ = (lejos + cerca) / (cerca - lejos) * vistaZ; // Calcula el término de profundidad dependiente de Z.
                     clipZ += 2.0 * lejos * cerca / (cerca - lejos); // Añade el término constante de profundidad.
@@ -453,7 +440,7 @@ public class clase1 {
     private void crearPrograma() {
         int shaderVertices = compilar(GL_VERTEX_SHADER, vertexShader()); // Compila las transformaciones geométricas.
         int shaderFragmentos = 0; // Permite saber si el segundo shader llegó a crearse.
-        try { // Garantiza que ambos objetos intermedios se liberen incluso ante un fallo.
+        try { // Libera los shaders aunque falle.
             shaderFragmentos = compilar(GL_FRAGMENT_SHADER, fragmentShader()); // Compila el color de la etapa actual.
             programa = glCreateProgram(); // Crea el contenedor que enlazará ambos shaders.
             glAttachShader(programa, shaderVertices); // Adjunta el shader que calcula posiciones.
@@ -462,7 +449,7 @@ public class clase1 {
             if (glGetProgrami(programa, GL_LINK_STATUS) == GL_FALSE) { // Comprueba que el enlace haya sido válido.
                 throw new IllegalStateException(glGetProgramInfoLog(programa)); // Muestra incompatibilidades del programa.
             }
-        } finally { // Ya no hacen falta objetos shader separados después del enlace.
+        } finally { // Ya no se necesitan por separado.
             glDeleteShader(shaderVertices); // Libera el objeto del shader de vértices.
             if (shaderFragmentos != 0) { // Comprueba que el segundo objeto exista.
                 glDeleteShader(shaderFragmentos); // Libera el objeto del shader de fragmentos.
@@ -517,7 +504,7 @@ public class clase1 {
             -0.5f, -0.5f, 0.5f, 0, -1, 0, // Cara inferior: esquina frontal izquierda.
             -0.5f, -0.5f, -0.5f, 0, -1, 0 // Cara inferior: cierra los 36 vértices del cubo.
         };
-        vao = glGenVertexArrays(); // Reserva el objeto que recordará la disposición de los atributos.
+        vao = glGenVertexArrays(); // Crea el VAO.
         glBindVertexArray(vao); // Activa ese VAO para configurarlo.
         vbo = glGenBuffers(); // Reserva el buffer que almacenará los vértices.
         glBindBuffer(GL_ARRAY_BUFFER, vbo); // Selecciona el VBO como destino de datos de vértices.

@@ -30,9 +30,8 @@ public class clase4 extends clase3 {
     protected static final int ARBOL_TAJIBO = 2; // Tajibo blanco en flor (#FDFBF7).
     private static final float[] COLOR_SAKURA = {1.0f, 0.412f, 0.706f}; // #FF69B4 convertido a RGB entre 0 y 1.
     private static final float[] COLOR_TAJIBO = {0.992f, 0.984f, 0.969f}; // #FDFBF7 convertido a RGB entre 0 y 1.
-    private static final float CESPED = 0.37f;
-    private static final float[] FLOR_BLANCA = {0.98f, 0.97f, 0.94f}; // Flores blancas de los arbustos de la plaza.
-    private static final float[][] ILUMINARIAS = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}}; // Faroles de la plaza respecto a su centro. // Altura de la cara superior del césped de los parques.
+    private static final float CESPED = 0.37f; // Altura de la cara superior del césped de los parques.
+    private static final float[][] ILUMINARIAS = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}}; // Faroles de la plaza respecto a su centro.
     protected static final float[][] DESTINOS = { // Cada fila contiene X y Z de una parada sobre la calle.
         {50, -50}, // Primera entrega: esquina noreste, Barrio Norte.
         {-50, -20}, // Segunda entrega: avenida oeste, Distrito Oeste.
@@ -66,7 +65,7 @@ public class clase4 extends clase3 {
         super.reiniciar(); // Restaura posición, velocidad y orientación del vehículo.
         entregas = 0; // Vuelve a seleccionar la primera parada.
         tiempo = 0; // Reinicia el cronómetro de la partida.
-        trafico = crearTrafico(); // Devuelve los vehículos a su inicio: el jugador no reaparece encima de uno.
+        trafico = crearTrafico(); // El tráfico vuelve a empezar.
         liberarCruces(); // Ningún cruce queda reservado.
     }
 
@@ -176,279 +175,113 @@ public class clase4 extends clase3 {
         }
     }
 
-    // ---------- Parques: jardín japonés ----------
+    // ---------- Parques ----------
+    // Todo se arma con caja(x, y, z, ancho, alto, largo, r, g, b): dónde, qué tamaño y qué color.
+    // La altura se cuenta desde CESPED (el pasto) y el centro de una caja está a la mitad de su alto.
 
     /** Elige la especie de un árbol; el patrón mezcla las tres especies en cada parque y siempre da lo mismo. */
     protected static int especieArbol(int fila, int columna, int indice) {
         return (fila + columna + indice) % 3; // 0 verde común, 1 sakura, 2 tajibo blanco.
     }
 
-    /** Dibuja cuatro árboles, un sendero de piedras, una linterna de piedra y dos bancos. */
+    /** Parque normal: un árbol en cada esquina y un banco en el medio. */
     private void dibujarParque(int fila, int columna, float x, float z) {
-        if (fila == PLAZA && columna == PLAZA) { // El parque del centro de la ciudad es especial.
-            dibujarPlazaCentral(x, z); // Fuente, iluminarias y bancos alrededor.
+        if (fila == PLAZA && columna == PLAZA) { // El parque del centro de la ciudad es la plaza.
+            dibujarPlazaCentral(x, z); // Fuente, faroles, árboles y bancos.
             return; // No lleva la decoración de los demás parques.
         }
-        float[] esquinas = {-2.8f, 2.8f}; // Desplazamientos de los árboles respecto al centro del parque.
+        float[] esquinas = {-2.8f, 2.8f}; // Distancia de los árboles al centro del parque.
         int indice = 0; // Numera los árboles para elegir su especie.
-        for (float desplazamientoX : esquinas) { // Lado izquierdo o derecho del parque.
-            for (float desplazamientoZ : esquinas) { // Lado norte o sur del parque.
-                dibujarArbol(x + desplazamientoX, z + desplazamientoZ, especieArbol(fila, columna, indice)); // Planta un árbol.
+        for (float dx : esquinas) { // Izquierda y derecha.
+            for (float dz : esquinas) { // Adelante y atrás.
+                dibujarArbol(x + dx, z + dz, especieArbol(fila, columna, indice)); // Planta un árbol.
                 indice++; // Pasa al siguiente árbol.
             }
         }
-        dibujarSendero(x, z); // Losas de piedra que cruzan el parque de norte a sur.
-        dibujarToro(x, z); // Linterna de piedra en el centro.
-        dibujarBanco(x - 1.6f, z, false); // Banco al oeste de la linterna.
-        dibujarBanco(x + 1.6f, z, false); // Banco al este de la linterna.
-        dibujarBasurero(x - 1.6f, z + 1.35f); // Basurero junto al banco oeste.
-        dibujarBasurero(x + 1.6f, z - 1.35f); // Basurero junto al banco este.
-        dibujarBebedero(x + 3.8f, z); // Bebedero en el borde este del parque.
-        dibujarArbusto(x - 1.2f, z - 3.7f, COLOR_SAKURA); // Arbustos a ambos lados de la entrada norte del sendero.
-        dibujarArbusto(x + 1.2f, z - 3.7f, null); // El segundo, sin flores, para variar.
-        dibujarArbusto(x - 1.2f, z + 3.7f, null); // Arbustos a ambos lados de la entrada sur.
-        dibujarArbusto(x + 1.2f, z + 3.7f, COLOR_SAKURA); // Con flores rosadas.
-        dibujarArbusto(x - 3.8f, z, COLOR_SAKURA); // Arbusto en el borde oeste, frente al bebedero.
+        dibujarBanco(x, z); // Banco en el centro.
     }
 
-    // ---------- Plaza central ----------
-
-    /** Plaza del centro: piso de piedra, fuente, iluminarias, cuatro bancos, árboles en flor y arbustos floridos. */
+    /** Plaza del centro: piso de piedra, fuente, cuatro faroles, cuatro árboles y cuatro bancos. */
     private void dibujarPlazaCentral(float x, float z) {
-        float diagonal = (float) (Math.PI / 4); // Giro que convierte dos cuadrados en un octágono.
-        caja(x, CESPED + 0.015f, z, 5.4f, 0.03f, 5.4f, 0.80f, 0.77f, 0.70f); // Piso de piedra clara.
-        cajaGirada(x, CESPED + 0.015f, z, 5.4f, 0.03f, 5.4f, 0.80f, 0.77f, 0.70f, diagonal); // Piso girado: forma octogonal.
-        dibujarFuente(x, z); // Fuente de agua en el centro.
-        dibujarArbol(x - 2.8f, z - 2.8f, ARBOL_SAKURA); // Sakuras y tajibos alternados en diagonal.
-        dibujarArbol(x + 2.8f, z + 2.8f, ARBOL_SAKURA); // Segundo sakura.
-        dibujarArbol(x - 2.8f, z + 2.8f, ARBOL_TAJIBO); // Primer tajibo blanco.
-        dibujarArbol(x + 2.8f, z - 2.8f, ARBOL_TAJIBO); // Segundo tajibo blanco.
-        dibujarBanco(x - 3.3f, z, false); // Banco oeste, mirando a la fuente.
-        dibujarBanco(x + 3.3f, z, false); // Banco este.
-        dibujarBanco(x, z - 3.3f, true); // Banco norte.
-        dibujarBanco(x, z + 3.3f, true); // Banco sur.
-        for (float[] farol : ILUMINARIAS) { // Faroles en las cuatro diagonales.
-            dibujarIluminaria(x + farol[0], z + farol[1]); // Construye cada farol.
+        caja(x, CESPED + 0.015f, z, 7, 0.03f, 7, 0.80f, 0.77f, 0.70f); // Piso de piedra clara.
+        dibujarFuente(x, z); // Fuente en el centro.
+        for (float[] farol : ILUMINARIAS) { // Un farol en cada diagonal.
+            dibujarIluminaria(x + farol[0], z + farol[1]); // Poste y foco.
         }
-        for (int lado = -1; lado <= 1; lado += 2) { // Recorre ambos lados de cada eje.
-            dibujarArbusto(x - 1.7f, z + lado * 4.0f, COLOR_SAKURA); // Arbustos junto a los bancos norte y sur.
-            dibujarArbusto(x + 1.7f, z + lado * 4.0f, FLOR_BLANCA); // Alterna flores rosadas y blancas.
-            dibujarArbusto(x + lado * 4.0f, z - 1.7f, FLOR_BLANCA); // Arbustos junto a los bancos oeste y este.
-            dibujarArbusto(x + lado * 4.0f, z + 1.7f, COLOR_SAKURA); // Con flores rosadas.
-        }
-        dibujarBasurero(x + 3.2f, z - 1.3f); // Basurero junto al banco este.
-        dibujarBasurero(x - 3.2f, z + 1.3f); // Basurero junto al banco oeste.
+        dibujarArbol(x - 2.8f, z - 2.8f, ARBOL_SAKURA); // Árbol rosado.
+        dibujarArbol(x + 2.8f, z + 2.8f, ARBOL_SAKURA); // Árbol rosado.
+        dibujarArbol(x - 2.8f, z + 2.8f, ARBOL_TAJIBO); // Árbol blanco.
+        dibujarArbol(x + 2.8f, z - 2.8f, ARBOL_TAJIBO); // Árbol blanco.
+        dibujarBanco(x - 3.3f, z); // Banco oeste.
+        dibujarBanco(x + 3.3f, z); // Banco este.
+        dibujarBanco(x, z - 3.3f); // Banco norte.
+        dibujarBanco(x, z + 3.3f); // Banco sur.
     }
 
-    /** Construye una fuente de tres niveles con agua animada; de noche el agua se ilumina. */
+    /** Fuente sencilla: pileta de piedra con agua, una columna y un chorro. De noche el agua brilla. */
     private void dibujarFuente(float x, float z) {
-        float diagonal = (float) (Math.PI / 4); // Giro para las piletas octogonales.
-        float piedra = 0.86f; // Piedra clara de la fuente.
-        caja(x, CESPED + 0.25f, z, 3.4f, 0.5f, 3.4f, piedra, piedra - 0.02f, piedra - 0.07f); // Pileta exterior.
-        cajaGirada(x, CESPED + 0.25f, z, 3.4f, 0.5f, 3.4f, piedra, piedra - 0.02f, piedra - 0.07f, diagonal); // Pileta exterior girada.
-        caja(x, CESPED + 0.95f, z, 0.45f, 0.9f, 0.45f, piedra - 0.05f, piedra - 0.07f, piedra - 0.12f); // Columna central.
-        caja(x, CESPED + 1.45f, z, 1.5f, 0.18f, 1.5f, piedra, piedra - 0.02f, piedra - 0.07f); // Pileta intermedia.
-        cajaGirada(x, CESPED + 1.45f, z, 1.5f, 0.18f, 1.5f, piedra, piedra - 0.02f, piedra - 0.07f, diagonal); // Pileta intermedia girada.
-        caja(x, CESPED + 1.79f, z, 0.22f, 0.5f, 0.22f, piedra - 0.05f, piedra - 0.07f, piedra - 0.12f); // Columna superior.
-        caja(x, CESPED + 2.1f, z, 0.7f, 0.12f, 0.7f, piedra, piedra - 0.02f, piedra - 0.07f); // Cuenco alto.
-        cajaGirada(x, CESPED + 2.1f, z, 0.7f, 0.12f, 0.7f, piedra, piedra - 0.02f, piedra - 0.07f, diagonal); // Cuenco alto girado.
-
-        float[] agua = {0.25f, 0.58f, 0.88f}; // Azul del agua de día.
-        float[] chorro = {0.70f, 0.88f, 1.0f}; // Agua en movimiento, más clara.
-        if (lucesEncendidas()) { // De noche focos sumergidos iluminan el agua.
+        caja(x, CESPED + 0.25f, z, 3.4f, 0.5f, 3.4f, 0.86f, 0.84f, 0.79f); // Pileta de piedra.
+        caja(x, CESPED + 1.0f, z, 0.4f, 1.0f, 0.4f, 0.81f, 0.79f, 0.74f); // Columna central.
+        if (lucesEncendidas()) { // De noche el agua está iluminada.
             entero("uEmision", 1); // El agua brilla por sí misma.
-            agua = new float[] {0.30f, 0.75f, 1.0f}; // Celeste luminoso.
-            chorro = new float[] {0.80f, 0.95f, 1.0f}; // Chorros casi blancos.
         }
-        caja(x, CESPED + 0.51f, z, 3.0f, 0.02f, 3.0f, agua[0], agua[1], agua[2]); // Agua de la pileta exterior.
-        cajaGirada(x, CESPED + 0.51f, z, 3.0f, 0.02f, 3.0f, agua[0], agua[1], agua[2], diagonal); // Agua exterior girada.
-        caja(x, CESPED + 1.55f, z, 1.3f, 0.02f, 1.3f, agua[0], agua[1], agua[2]); // Agua de la pileta intermedia.
-        cajaGirada(x, CESPED + 1.55f, z, 1.3f, 0.02f, 1.3f, agua[0], agua[1], agua[2], diagonal); // Agua intermedia girada.
-        caja(x, CESPED + 2.17f, z, 0.56f, 0.02f, 0.56f, agua[0], agua[1], agua[2]); // Agua del cuenco alto.
-
-        float altura = 0.55f + 0.15f * (float) Math.sin(relojCiudad * 3); // El chorro central sube y baja.
-        caja(x, CESPED + 2.18f + altura / 2, z, 0.08f, altura, 0.08f, chorro[0], chorro[1], chorro[2]); // Chorro central.
-        cajaGirada(x, CESPED + 2.2f + altura, z, 0.2f, 0.1f, 0.2f, chorro[0], chorro[1], chorro[2], relojCiudad * 2); // Remate del chorro, girando.
-        float ondas = 0.25f + 0.05f * (float) Math.sin(relojCiudad * 4); // Las salpicaduras cambian de tamaño.
-        for (int indice = 0; indice < 4; indice++) { // Cuatro cascadas desde la pileta intermedia.
-            float angulo = indice * (float) (Math.PI / 2); // Norte, este, sur y oeste.
-            float cascadaX = x + (float) Math.sin(angulo) * 1.1f; // Justo afuera de la pileta intermedia.
-            float cascadaZ = z + (float) Math.cos(angulo) * 1.1f; // Justo afuera de la pileta intermedia.
-            cajaGirada(cascadaX, CESPED + 0.98f, cascadaZ, 0.22f, 0.92f, 0.05f, chorro[0], chorro[1], chorro[2], angulo); // Lámina de agua cayendo.
-            cajaGirada(cascadaX, CESPED + 0.53f, cascadaZ, ondas, 0.02f, ondas, chorro[0], chorro[1], chorro[2], relojCiudad + angulo); // Salpicadura.
-        }
-        entero("uEmision", 0); // El resto de la plaza recibe luz normal.
+        caja(x, CESPED + 0.51f, z, 3.0f, 0.02f, 3.0f, 0.25f, 0.58f, 0.88f); // Agua azul de la pileta.
+        caja(x, CESPED + 1.8f, z, 0.1f, 0.6f, 0.1f, 0.70f, 0.88f, 1.0f); // Chorro de agua.
+        entero("uEmision", 0); // Lo siguiente recibe luz normal.
     }
 
-    /** Construye un farol de jardín bajo (por debajo de las copas) que se enciende de noche. */
+    /** Farol de la plaza: un poste oscuro y un foco que se enciende de noche. */
     private void dibujarIluminaria(float x, float z) {
-        float metal = 0.13f; // Metal oscuro.
-        caja(x, CESPED + 0.075f, z, 0.3f, 0.15f, 0.3f, metal, metal + 0.01f, metal + 0.03f); // Base.
-        caja(x, CESPED + 0.76f, z, 0.08f, 1.22f, 0.08f, metal + 0.04f, metal + 0.05f, metal + 0.07f); // Poste.
-        float[] luz = {0.60f, 0.62f, 0.60f}; // Vidrio apagado de día.
-        if (lucesEncendidas()) { // De noche el farol alumbra.
-            entero("uEmision", 1); // El farol es una fuente de luz.
-            luz = new float[] {1.0f, 0.85f, 0.55f}; // Luz cálida.
+        caja(x, CESPED + 0.7f, z, 0.1f, 1.4f, 0.1f, 0.15f, 0.16f, 0.18f); // Poste.
+        float[] luz = {0.60f, 0.62f, 0.60f}; // Foco apagado de día (gris).
+        if (lucesEncendidas()) { // De noche el foco alumbra.
+            entero("uEmision", 1); // El foco es una fuente de luz.
+            luz = new float[] {1.0f, 0.85f, 0.55f}; // Amarillo cálido.
         }
-        caja(x, CESPED + 1.55f, z, 0.3f, 0.36f, 0.3f, luz[0], luz[1], luz[2]); // Farol.
-        entero("uEmision", 0); // Tapa y remate reciben luz normal.
-        cajaGirada(x, CESPED + 1.76f, z, 0.42f, 0.06f, 0.42f, metal, metal + 0.01f, metal + 0.03f, (float) (Math.PI / 4)); // Tapa.
-        caja(x, CESPED + 1.83f, z, 0.08f, 0.08f, 0.08f, metal, metal + 0.01f, metal + 0.03f); // Remate.
+        caja(x, CESPED + 1.55f, z, 0.3f, 0.3f, 0.3f, luz[0], luz[1], luz[2]); // Foco.
+        entero("uEmision", 0); // Lo siguiente recibe luz normal.
     }
 
-    /** Suma los halos nocturnos de la plaza central a los de farolas y auto. */
-    @Override // Usa el gancho que clase3 llama con la mezcla aditiva activada.
-    protected void halosAdicionales() {
-        halosTrafico(); // Faros y luces de freno de los vehículos autónomos.
-        if (factorNoche <= 0) { // De día no hay halos de la plaza.
-            return; // Termina sin dibujar.
-        }
-        float plazaX = centro(PLAZA); // Centro X de la plaza.
-        float plazaZ = centro(PLAZA); // Centro Z de la plaza.
-        float fuerza = factorNoche * 0.6f; // Crece con la transición a la noche.
-        for (float[] farol : ILUMINARIAS) { // Un halo cálido por farol.
-            caja(plazaX + farol[0], CESPED + 1.55f, plazaZ + farol[1], 1.5f, 1.5f, 1.5f, fuerza, fuerza * 0.8f, fuerza * 0.5f); // Halo del farol.
-        }
-        caja(plazaX, CESPED + 1.3f, plazaZ, 5, 5, 5, fuerza * 0.12f, fuerza * 0.35f, fuerza * 0.55f); // Resplandor celeste de la fuente.
-    }
-
-    /** Construye un arbusto redondeado; con un color de flor (o null sin flores) parece una azalea. */
-    private void dibujarArbusto(float x, float z, float[] flor) {
-        caja(x, CESPED + 0.3f, z, 0.9f, 0.6f, 0.9f, 0.13f, 0.40f, 0.17f); // Cuerpo del arbusto.
-        cajaGirada(x, CESPED + 0.42f, z, 0.75f, 0.6f, 0.75f, 0.17f, 0.48f, 0.21f, (float) (Math.PI / 4)); // Capa girada: silueta redonda.
-        if (flor != null) { // Azalea: florecitas sobre el follaje.
-            caja(x - 0.22f, CESPED + 0.74f, z + 0.1f, 0.14f, 0.06f, 0.14f, flor[0], flor[1], flor[2]); // Flor izquierda.
-            caja(x + 0.2f, CESPED + 0.72f, z - 0.18f, 0.14f, 0.06f, 0.14f, flor[0], flor[1], flor[2]); // Flor derecha.
-            caja(x + 0.05f, CESPED + 0.75f, z + 0.25f, 0.14f, 0.06f, 0.14f, flor[0], flor[1], flor[2]); // Flor trasera.
-        }
-    }
-
-    /** Construye un basurero octogonal verde oscuro con tapa gris. */
-    private void dibujarBasurero(float x, float z) {
-        caja(x, CESPED + 0.32f, z, 0.4f, 0.64f, 0.4f, 0.12f, 0.26f, 0.18f); // Cuerpo.
-        cajaGirada(x, CESPED + 0.32f, z, 0.4f, 0.64f, 0.4f, 0.12f, 0.26f, 0.18f, (float) (Math.PI / 4)); // Cuerpo girado: forma octogonal.
-        caja(x, CESPED + 0.67f, z, 0.46f, 0.06f, 0.46f, 0.45f, 0.46f, 0.48f); // Tapa gris.
-        caja(x, CESPED + 0.6f, z, 0.2f, 0.03f, 0.48f, 0.05f, 0.05f, 0.05f); // Ranura oscura bajo la tapa.
-    }
-
-    /** Construye un bebedero: pedestal de piedra, cuenca, agua y caño metálico. */
-    private void dibujarBebedero(float x, float z) {
-        caja(x, CESPED + 0.04f, z, 0.6f, 0.08f, 0.6f, 0.50f, 0.50f, 0.48f); // Base de piedra.
-        caja(x, CESPED + 0.45f, z, 0.32f, 0.8f, 0.32f, 0.60f, 0.60f, 0.58f); // Pedestal.
-        caja(x, CESPED + 0.9f, z, 0.62f, 0.12f, 0.48f, 0.78f, 0.79f, 0.80f); // Cuenca gris claro.
-        caja(x, CESPED + 0.965f, z, 0.48f, 0.02f, 0.34f, 0.35f, 0.70f, 0.95f); // Agua celeste.
-        caja(x - 0.12f, CESPED + 1.05f, z, 0.06f, 0.14f, 0.06f, 0.70f, 0.72f, 0.75f); // Caño metálico.
-    }
-
-    /** Construye un árbol con cajas; cada especie tiene su tronco, su copa y, si florece, pétalos en el suelo. */
+    /** Dibuja un árbol: un tronco marrón y una copa cuadrada del color de su especie. */
     private void dibujarArbol(float x, float z, int especie) {
-        float diagonal = (float) (Math.PI / 4); // Girar capas 45° redondea la silueta de la copa.
-        if (especie == ARBOL_SAKURA) { // Cerezo: tronco rojizo y copa ancha y plana en capas rosadas.
-            float[] flor = COLOR_SAKURA; // Rosa del sakura.
-            cajaGirada(x, CESPED + 0.01f, z, 2.4f, 0.02f, 2.4f, flor[0], flor[1], flor[2], diagonal); // Pétalos caídos (giro).
-            caja(x, CESPED + 0.01f, z, 2.4f, 0.02f, 2.4f, flor[0], flor[1], flor[2]); // Pétalos caídos: con la otra forman un octágono.
-            caja(x, CESPED + 1.0f, z, 0.3f, 2.0f, 0.3f, 0.30f, 0.17f, 0.15f); // Tronco oscuro rojizo.
-            caja(x, 2.75f, z, 2.6f, 0.8f, 2.6f, flor[0] * 0.92f, flor[1] * 0.92f, flor[2] * 0.92f); // Capa baja, algo en sombra.
-            cajaGirada(x, 3.45f, z, 2.4f, 0.7f, 2.4f, flor[0], flor[1], flor[2], diagonal); // Capa media girada.
-            caja(x, 4.05f, z, 1.4f, 0.55f, 1.4f, 1.0f, 0.62f, 0.82f); // Copa superior más clara.
-        } else if (especie == ARBOL_TAJIBO) { // Tajibo blanco: tronco claro y copa redondeada blanca.
-            float[] flor = COLOR_TAJIBO; // Blanco del tajibo.
-            cajaGirada(x, CESPED + 0.01f, z, 2.2f, 0.02f, 2.2f, flor[0], flor[1], flor[2], diagonal); // Pétalos caídos (giro).
-            caja(x, CESPED + 0.01f, z, 2.2f, 0.02f, 2.2f, flor[0], flor[1], flor[2]); // Pétalos caídos.
-            caja(x, CESPED + 1.15f, z, 0.3f, 2.3f, 0.3f, 0.52f, 0.47f, 0.42f); // Tronco gris claro.
-            cajaGirada(x, 2.95f, z, 2.2f, 0.8f, 2.2f, 0.90f, 0.89f, 0.87f, diagonal); // Capa baja en sombra.
-            caja(x, 3.6f, z, 2.5f, 0.8f, 2.5f, flor[0], flor[1], flor[2]); // Capa media, la más ancha.
-            cajaGirada(x, 4.3f, z, 1.6f, 0.6f, 1.6f, flor[0], flor[1], flor[2], diagonal); // Remate redondeado.
-        } else { // Árbol verde común: copa en dos niveles.
-            caja(x, CESPED + 1.1f, z, 0.35f, 2.2f, 0.35f, 0.38f, 0.24f, 0.14f); // Tronco marrón.
-            caja(x, 2.9f, z, 2.4f, 1.6f, 2.4f, 0.10f, 0.36f, 0.18f); // Copa baja verde oscuro.
-            cajaGirada(x, 4.1f, z, 1.6f, 1.3f, 1.6f, 0.18f, 0.50f, 0.25f, diagonal); // Copa alta más clara.
+        caja(x, CESPED + 1.1f, z, 0.35f, 2.2f, 0.35f, 0.38f, 0.24f, 0.14f); // Tronco marrón.
+        if (especie == ARBOL_SAKURA) { // Sakura: copa rosada.
+            caja(x, 3.4f, z, 2.4f, 2.0f, 2.4f, COLOR_SAKURA[0], COLOR_SAKURA[1], COLOR_SAKURA[2]); // Copa rosada.
+        } else if (especie == ARBOL_TAJIBO) { // Tajibo: copa blanca.
+            caja(x, 3.4f, z, 2.4f, 2.0f, 2.4f, COLOR_TAJIBO[0], COLOR_TAJIBO[1], COLOR_TAJIBO[2]); // Copa blanca.
+        } else { // Árbol común: copa verde.
+            caja(x, 3.4f, z, 2.4f, 2.0f, 2.4f, 0.12f, 0.42f, 0.23f); // Copa verde.
         }
     }
 
-    /** Coloca losas planas espaciadas (tobi-ishi) a lo largo del eje norte-sur del parque. */
-    private void dibujarSendero(float x, float z) {
-        float[] distancias = {1.2f, 2.1f, 3.0f, 3.9f}; // Distancia de cada losa al centro.
-        for (int lado = -1; lado <= 1; lado += 2) { // Mitad norte y mitad sur.
-            for (int indice = 0; indice < distancias.length; indice++) { // Recorre las losas de esa mitad.
-                float corrimiento = indice % 2 == 0 ? 0.12f : -0.12f; // Alterna un poco a cada lado: aspecto natural.
-                caja(x + corrimiento, CESPED + 0.02f, z + lado * distancias[indice], 0.75f, 0.05f, 0.6f, 0.64f, 0.63f, 0.60f); // Losa.
-            }
-        }
-    }
-
-    /** Construye una linterna de piedra japonesa (tōrō) que se enciende de noche. */
-    private void dibujarToro(float x, float z) {
-        float piedra = 0.56f; // Gris de la piedra.
-        caja(x, CESPED + 0.1f, z, 0.9f, 0.2f, 0.9f, piedra - 0.06f, piedra - 0.06f, piedra - 0.08f); // Base.
-        caja(x, CESPED + 0.65f, z, 0.3f, 0.9f, 0.3f, piedra, piedra, piedra - 0.03f); // Columna.
-        caja(x, CESPED + 1.16f, z, 0.7f, 0.12f, 0.7f, piedra, piedra, piedra - 0.03f); // Plataforma de la lámpara.
-        float[] luz = {piedra - 0.1f, piedra - 0.1f, piedra - 0.12f}; // De día la caja de luz es de piedra oscura.
-        if (lucesEncendidas()) { // De noche la vela interior brilla.
-            entero("uEmision", 1); // La caja de luz es una fuente de luz.
-            luz = new float[] {1.0f, 0.78f, 0.45f}; // Luz cálida.
-        }
-        caja(x, CESPED + 1.45f, z, 0.46f, 0.45f, 0.46f, luz[0], luz[1], luz[2]); // Caja de luz.
-        entero("uEmision", 0); // El resto de la linterna recibe luz normal.
-        caja(x, CESPED + 1.74f, z, 1.0f, 0.12f, 1.0f, piedra - 0.08f, piedra - 0.08f, piedra - 0.1f); // Tejadillo ancho.
-        cajaGirada(x, CESPED + 1.86f, z, 0.6f, 0.14f, 0.6f, piedra - 0.08f, piedra - 0.08f, piedra - 0.1f, (float) (Math.PI / 4)); // Segunda capa del tejado.
-        caja(x, CESPED + 2.0f, z, 0.16f, 0.16f, 0.16f, piedra, piedra, piedra - 0.03f); // Remate superior.
-    }
-
-    /** Construye un banco japonés bajo, sin respaldo: tres listones de madera sobre dos bloques de piedra. */
-    private void dibujarBanco(float x, float z, boolean largoEnX) {
-        for (int lado = -1; lado <= 1; lado += 2) { // Un bloque en cada extremo.
-            if (largoEnX) { // Banco orientado de oeste a este.
-                caja(x + lado * 0.6f, CESPED + 0.18f, z, 0.3f, 0.36f, 0.55f, 0.34f, 0.35f, 0.36f); // Apoyo de piedra oscura.
-            } else { // Banco orientado de norte a sur.
-                caja(x, CESPED + 0.18f, z + lado * 0.6f, 0.55f, 0.36f, 0.3f, 0.34f, 0.35f, 0.36f); // Apoyo de piedra oscura.
-            }
-        }
-        for (int liston = -1; liston <= 1; liston++) { // Tres listones con una pequeña separación.
-            if (largoEnX) { // Listones a lo largo de X.
-                caja(x, CESPED + 0.39f, z + liston * 0.2f, 1.8f, 0.06f, 0.16f, 0.78f, 0.60f, 0.40f); // Listón de madera clara.
-            } else { // Listones a lo largo de Z.
-                caja(x + liston * 0.2f, CESPED + 0.39f, z, 0.16f, 0.06f, 1.8f, 0.78f, 0.60f, 0.40f); // Listón de madera clara.
-            }
-        }
+    /** Banco de madera: patas oscuras, asiento y respaldo. */
+    private void dibujarBanco(float x, float z) {
+        caja(x, CESPED + 0.2f, z, 1.4f, 0.4f, 0.3f, 0.22f, 0.24f, 0.24f); // Patas.
+        caja(x, CESPED + 0.45f, z, 2.0f, 0.12f, 0.6f, 0.55f, 0.30f, 0.13f); // Asiento.
+        caja(x, CESPED + 0.75f, z + 0.3f, 2.0f, 0.5f, 0.1f, 0.55f, 0.30f, 0.13f); // Respaldo.
     }
 
     // ---------- Edificios ----------
 
-    /** Distribuye ventanas por pisos: vidrio oscuro de día; de noche unas encendidas y otras apagadas. */
+    /** Pone tres ventanas por piso en cada fachada; de noche la mayoría se encienden. */
     private void dibujarVentanas(int fila, int columna, float x, float z, float altura) {
-        boolean deNoche = lucesEncendidas(); // Las habitaciones solo se iluminan de noche.
-        int piso = 0; // Numera los pisos para variar qué ventanas se encienden.
-        for (float y = 1.7f; y + 0.45f < altura; y += 2) { // Recorre los pisos sin invadir la cornisa.
-            for (int ventana = 0; ventana < 3; ventana++) { // Tres ventanas por fachada.
-                float desplazamiento = (ventana - 1) * 2; // -2, 0 o 2 respecto al centro de la fachada.
-                for (int fachada = 0; fachada < 4; fachada++) { // Norte, sur, oeste y este.
-                    int patron = fila * 7 + columna * 5 + piso * 3 + ventana * 11 + fachada * 13; // Número reproducible.
-                    boolean encendida = deNoche && patron % 4 != 0; // Tres de cada cuatro ventanas encendidas.
-                    float r = 0.24f; // Vidrio azulado oscuro por defecto.
-                    float g = 0.32f; // Componente verde del vidrio.
-                    float b = 0.42f; // Componente azul del vidrio.
-                    entero("uEmision", 0); // Una ventana apagada recibe la luz del entorno.
-                    if (encendida) { // Habitación iluminada.
-                        entero("uEmision", 1); // Brilla sin depender de las farolas.
-                        r = 0.98f; // Luz interior cálida.
-                        g = 0.80f; // Componente verde de la luz cálida.
-                        b = 0.45f; // Componente azul de la luz cálida.
-                    }
-                    if (fachada == 0) { // Fachada norte.
-                        caja(x + desplazamiento, y, z - 3.51f, 0.8f, 0.9f, 0.04f, r, g, b); // Ventana norte.
-                    } else if (fachada == 1) { // Fachada sur.
-                        caja(x + desplazamiento, y, z + 3.51f, 0.8f, 0.9f, 0.04f, r, g, b); // Ventana sur.
-                    } else if (fachada == 2) { // Fachada oeste.
-                        caja(x - 3.51f, y, z + desplazamiento, 0.04f, 0.9f, 0.8f, r, g, b); // Ventana oeste.
-                    } else { // Fachada este.
-                        caja(x + 3.51f, y, z + desplazamiento, 0.04f, 0.9f, 0.8f, r, g, b); // Ventana este.
-                    }
+        int piso = 0; // Número de piso.
+        for (float y = 1.7f; y + 0.45f < altura; y += 2) { // Un piso cada 2 unidades, sin tocar el techo.
+            for (int ventana = -1; ventana <= 1; ventana++) { // Ventana izquierda, central y derecha.
+                float d = ventana * 2; // Separación desde el centro de la fachada.
+                float r = 0.24f, g = 0.32f, b = 0.42f; // Vidrio azul oscuro.
+                if (lucesEncendidas() && (fila + columna + piso + ventana) % 4 != 0) { // 3 de cada 4 se encienden.
+                    entero("uEmision", 1); // La ventana brilla.
+                    r = 0.98f; g = 0.80f; b = 0.45f; // Luz amarilla.
                 }
+                caja(x + d, y, z - 3.51f, 0.8f, 0.9f, 0.04f, r, g, b); // Fachada norte.
+                caja(x + d, y, z + 3.51f, 0.8f, 0.9f, 0.04f, r, g, b); // Fachada sur.
+                caja(x - 3.51f, y, z + d, 0.04f, 0.9f, 0.8f, r, g, b); // Fachada oeste.
+                caja(x + 3.51f, y, z + d, 0.04f, 0.9f, 0.8f, r, g, b); // Fachada este.
+                entero("uEmision", 0); // Lo siguiente recibe luz normal.
             }
-            piso++; // Pasa al piso siguiente.
+            piso++; // Siguiente piso.
         }
-        entero("uEmision", 0); // Restablece la iluminación normal de los demás elementos.
     }
 
     // ---------- Calles: pasos peatonales ----------
@@ -494,49 +327,36 @@ public class clase4 extends clase3 {
         return FASE_AMARILLO; // Últimos dos segundos: precaución.
     }
 
-    /** Construye un poste con dos cabezales: uno para el tráfico en Z y otro, con la fase opuesta, para el tráfico en X. */
+    /** Semáforo: poste, dos brazos cortos y dos cabezales, uno para cada calle (con fases opuestas). */
     private void dibujarSemaforo(float[] esquina) {
-        float x = esquina[0]; // Poste X sobre la acera.
-        float z = esquina[1]; // Poste Z sobre la acera.
-        float haciaX = esquina[2]; // Sentido X hacia el cruce.
-        float haciaZ = esquina[3]; // Sentido Z hacia el cruce.
-        caja(x, 0.45f, z, 0.36f, 0.3f, 0.36f, 0.16f, 0.17f, 0.19f); // Base sobre la acera.
+        float x = esquina[0]; // Poste X en la acera.
+        float z = esquina[1]; // Poste Z en la acera.
+        float haciaX = esquina[2]; // Hacia el cruce en X (-1 o 1).
+        float haciaZ = esquina[3]; // Hacia el cruce en Z (-1 o 1).
         caja(x, 2.1f, z, 0.16f, 3.6f, 0.16f, 0.20f, 0.22f, 0.25f); // Poste.
-        caja(x + haciaX * 0.2f, 3.6f, z, 0.4f, 0.1f, 0.1f, 0.20f, 0.22f, 0.25f); // Brazo corto hacia la calle vertical.
-        caja(x, 3.6f, z + haciaZ * 0.2f, 0.1f, 0.1f, 0.4f, 0.20f, 0.22f, 0.25f); // Brazo corto hacia la calle horizontal.
-        dibujarCabezal(x + haciaX * 0.45f, z, true, faseSemaforo(relojCiudad)); // Controla a los autos que avanzan en Z.
-        dibujarCabezal(x, z + haciaZ * 0.45f, false, faseSemaforo(relojCiudad + 6)); // Mientras uno está en rojo, el otro avanza.
+        caja(x + haciaX * 0.2f, 3.6f, z, 0.4f, 0.1f, 0.1f, 0.20f, 0.22f, 0.25f); // Brazo en X.
+        caja(x, 3.6f, z + haciaZ * 0.2f, 0.1f, 0.1f, 0.4f, 0.20f, 0.22f, 0.25f); // Brazo en Z.
+        dibujarCabezal(x + haciaX * 0.45f, z, true, faseSemaforo(relojCiudad)); // Para los autos que van en Z.
+        dibujarCabezal(x, z + haciaZ * 0.45f, false, faseSemaforo(relojCiudad + 6)); // Para los autos que van en X.
     }
 
-    /** Dibuja la carcasa y las tres luces (rojo arriba, amarillo, verde abajo) en las dos caras del cabezal. */
+    /** Cabezal: caja negra con tres luces (rojo arriba, amarillo, verde abajo); solo brilla la de la fase actual. */
     private void dibujarCabezal(float x, float z, boolean miraZ, int fase) {
-        float y = 3.4f; // Altura del centro del cabezal.
-        float anchoX = miraZ ? 0.42f : 0.36f; // La cara con luces es la más ancha.
-        float anchoZ = miraZ ? 0.36f : 0.42f; // Profundidad de la carcasa.
-        caja(x, y, z, anchoX, 1.15f, anchoZ, 0.07f, 0.08f, 0.10f); // Carcasa negra.
+        caja(x, 3.4f, z, 0.36f, 1.15f, 0.36f, 0.07f, 0.08f, 0.10f); // Carcasa negra.
         int[] fases = {FASE_ROJO, FASE_AMARILLO, FASE_VERDE}; // Fase de cada luz, de arriba a abajo.
         float[][] colores = {{1, 0.12f, 0.08f}, {1, 0.70f, 0.05f}, {0.15f, 1, 0.35f}}; // Rojo, amarillo y verde.
-        for (int indice = 0; indice < 3; indice++) { // Recorre las tres luces.
-            boolean encendida = fase == fases[indice]; // Solo brilla la luz de la fase actual.
-            float brillo = 0.18f; // Una luz apagada conserva un color muy tenue.
-            entero("uEmision", 0); // Una luz apagada recibe la iluminación normal.
-            if (encendida) { // Luz de la fase activa.
+        float anchoX = miraZ ? 0.26f : 0.44f; // La luz sobresale por las dos caras que miran a la calle.
+        float anchoZ = miraZ ? 0.44f : 0.26f;
+        for (int i = 0; i < 3; i++) { // Las tres luces.
+            float brillo = 0.18f; // Apagada: color muy oscuro.
+            if (fase == fases[i]) { // Es la luz de la fase actual.
                 brillo = 1; // Color completo.
-                entero("uEmision", 1); // Se ve encendida también de día.
+                entero("uEmision", 1); // Brilla también de día.
             }
-            float r = colores[indice][0] * brillo; // Rojo de esta luz.
-            float g = colores[indice][1] * brillo; // Verde de esta luz.
-            float b = colores[indice][2] * brillo; // Azul de esta luz.
-            float altura = y + 0.36f - indice * 0.36f; // Separa verticalmente las tres luces.
-            for (int lado = -1; lado <= 1; lado += 2) { // Las dos caras del cabezal, para ambos sentidos.
-                if (miraZ) { // Luces visibles desde el norte y el sur.
-                    caja(x, altura, z + lado * 0.19f, 0.26f, 0.26f, 0.04f, r, g, b); // Luz en la cara Z.
-                } else { // Luces visibles desde el oeste y el este.
-                    caja(x + lado * 0.19f, altura, z, 0.04f, 0.26f, 0.26f, r, g, b); // Luz en la cara X.
-                }
-            }
+            float y = 3.76f - i * 0.36f; // Altura de esta luz.
+            caja(x, y, z, anchoX, 0.26f, anchoZ, colores[i][0] * brillo, colores[i][1] * brillo, colores[i][2] * brillo); // Luz.
+            entero("uEmision", 0); // Lo siguiente recibe luz normal.
         }
-        entero("uEmision", 0); // Evita que el siguiente objeto herede la emisión del semáforo.
     }
 
     // ==================== 6. MINIMAPA: SEGUNDO PASE DE DIBUJO ====================
@@ -554,7 +374,7 @@ public class clase4 extends clase3 {
         if (estado != JUGANDO) { // Menú de inicio o de pausa.
             dibujarMenu(); // Se dibuja encima de todo.
         }
-        if (glGetError() != GL_NO_ERROR) { // Comprueba que los pases extra no hayan generado errores OpenGL.
+        if (glGetError() != GL_NO_ERROR) { // Revisa errores de OpenGL.
             throw new IllegalStateException("Error OpenGL en minimapa o panel"); // Expone el error en la consola.
         }
     }
@@ -574,10 +394,10 @@ public class clase4 extends clase3 {
         glClearColor(0.06f, 0.10f, 0.15f, 1); // Define el fondo oscuro del mapa.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Limpia color y profundidad dentro del mapa.
         glViewport(x, y, lado, lado); // Redirige la proyección al recuadro cuadrado.
-        entero("uMapa", 1); // Selecciona la proyección ortográfica del shader de clase1.
+        entero("uMapa", 1); // Vista desde arriba.
         decimal("uEscalaMapa", LIMITE + 6); // Deja un margen arriba para la marca del norte.
         vistaMapa = true; // Indica a escena() que omita decoración pequeña y baliza flotante.
-        try { // Asegura que el estado de dibujo se restaure incluso si el segundo pase falla.
+        try { // Restaura la vista aunque falle.
             escena(); // Dibuja otra vez la misma ciudad, ahora vista desde arriba.
             dibujarIndicadorAuto(); // Resalta la posición y el frente del jugador en el mapa.
             dibujarNorte(); // Escribe una N en el borde superior: el norte (-Z) queda arriba.
@@ -611,27 +431,28 @@ public class clase4 extends clase3 {
 
     // ==================== 7. TRÁFICO AUTÓNOMO ====================
 
-    protected static final int AVENTADOR = 0; // Lamborghini Aventador celeste.
-    protected static final int MUSTANG = 1; // Ford Mustang amarillo.
-    protected static final int JIMNY = 2; // Suzuki Jimny verde.
+    protected static final int AVENTADOR = 0; // Auto celeste.
+    protected static final int MUSTANG = 1; // Auto amarillo.
+    protected static final int JIMNY = 2; // Auto verde.
     private static final float CARRIL = 2.5f; // Distancia del centro de la calle al centro del carril derecho.
     private static final float ZONA_CRUCE = 6; // Distancia a un cruce desde la que hay que reservarlo.
     protected static final float RADIO_VEHICULO = 1.4f; // Radio de colisión de cada vehículo autónomo.
     private static final int NODOS = MAPA.length / 2 + 1; // Intersecciones por lado: calles en filas y columnas pares.
     private static final int[][][] RUTAS = { // Esquinas de cada ruta cerrada: columna y fila de la intersección (0 a 5).
-        {{1, 1}, {4, 1}, {4, 4}, {1, 4}}, // Aventador: anillo alrededor del centro.
-        {{0, 0}, {3, 0}, {3, 3}, {5, 3}, {5, 5}, {2, 5}, {2, 2}, {0, 2}}, // Mustang: recorrido con ocho giros.
-        {{1, 2}, {4, 2}, {4, 5}, {1, 5}} // Jimny: rectángulo hacia el Barrio Sur.
+        {{1, 1}, {4, 1}, {4, 4}, {1, 4}}, // Auto celeste: anillo alrededor del centro.
+        {{0, 0}, {3, 0}, {3, 3}, {5, 3}, {5, 5}, {2, 5}, {2, 2}, {0, 2}}, // Auto amarillo: recorrido con ocho giros.
+        {{1, 2}, {4, 2}, {4, 5}, {1, 5}} // Auto verde: rectángulo hacia el Barrio Sur.
     };
     private static final int[] MODELOS = {AVENTADOR, MUSTANG, JIMNY}; // Modelo de cada ruta.
     private static final float[] VELOCIDADES = {10, 8, 6}; // Unidades por segundo de cada vehículo.
     private static final float[][] COLORES_MAPA = {{0.53f, 0.81f, 0.92f}, {1.0f, 0.80f, 0.08f}, {0.30f, 0.85f, 0.40f}}; // Marca de cada modelo en el minimapa.
+    private static final float[][] COLORES_AUTO = {{0.53f, 0.81f, 0.92f}, {1.0f, 0.80f, 0.08f}, {0.20f, 0.50f, 0.28f}}; // Carrocería de cada modelo: celeste, amarillo y verde.
 
     /** Estado de un vehículo autónomo: su ruta por los carriles y su posición actual. */
     protected static class Vehiculo {
         int modelo; // AVENTADOR, MUSTANG o JIMNY.
         float velocidad; // Unidades por segundo cuando avanza.
-        int[] nodos; // Identificador de cada intersección de la ruta (fila * NODOS + columna).
+        int[] nodos; // Número de cada cruce de la ruta.
         float[][] puntos; // Punto de paso X, Z sobre el carril derecho en cada intersección.
         int tramo; // Índice del punto de partida del tramo actual.
         float avance; // Distancia recorrida dentro del tramo.
@@ -639,7 +460,7 @@ public class clase4 extends clase3 {
         float z; // Posición Z actual.
         float dirX; // Dirección X del tramo actual.
         float dirZ; // Dirección Z del tramo actual.
-        float angulo; // Orientación visual, con la misma convención que el jugador.
+        float angulo; // Hacia dónde mira el auto.
         boolean detenido; // true si está esperando: enciende las luces de freno.
         int vueltas; // Vueltas completas a la ruta.
     }
@@ -820,16 +641,11 @@ public class clase4 extends clase3 {
 
     // ---------- Dibujo del tráfico ----------
 
-    /** Dibuja cada vehículo con su modelo. */
+    /** Dibuja cada vehículo con el color de su modelo. */
     private void dibujarTrafico() {
         for (Vehiculo vehiculo : trafico) { // Recorre los vehículos.
-            if (vehiculo.modelo == AVENTADOR) { // Lamborghini.
-                dibujarAventador(vehiculo); // Deportivo bajo celeste.
-            } else if (vehiculo.modelo == MUSTANG) { // Ford.
-                dibujarMustang(vehiculo); // Muscle car amarillo.
-            } else { // Suzuki.
-                dibujarJimny(vehiculo); // Todoterreno verde.
-            }
+            float[] color = COLORES_AUTO[vehiculo.modelo]; // Color de la carrocería.
+            dibujarVehiculo(vehiculo, color[0], color[1], color[2]); // Auto sencillo de ese color.
         }
     }
 
@@ -838,30 +654,20 @@ public class clase4 extends clase3 {
         piezaEn(v.x, v.z, v.angulo, x, y, z, sx, sy, sz, r, g, b); // Usa la posición y orientación del vehículo.
     }
 
-    /** Dibuja cuatro neumáticos con su llanta en la cara exterior. */
-    private void ruedas(Vehiculo v, float lado, float eje, float radio, float ancho, float llanta) {
-        for (int x = -1; x <= 1; x += 2) { // Izquierda y derecha.
-            for (int z = -1; z <= 1; z += 2) { // Eje delantero y trasero.
-                piezaDe(v, x * lado, radio, z * eje, ancho, radio * 2, radio * 2.2f, 0.05f, 0.06f, 0.07f); // Neumático.
-                piezaDe(v, x * (lado + ancho / 2 + 0.01f), radio, z * eje, 0.02f, radio * 1.2f, radio * 1.2f, llanta, llanta, llanta + 0.02f); // Llanta.
-            }
-        }
-    }
-
     /** Dibuja un faro delantero: brilla de noche. */
-    private void faro(Vehiculo v, float x, float y, float z, float sx, float sy) {
+    private void faro(Vehiculo v, float x) {
         float brillo = 0.85f; // Faro apagado de día.
         if (lucesEncendidas()) { // De noche los faros están encendidos.
             entero("uEmision", 1); // Fuente de luz.
             brillo = 1; // Color completo.
         }
-        piezaDe(v, x, y, z, sx, sy, 0.04f, brillo, brillo * 0.95f, brillo * 0.75f); // Faro.
+        piezaDe(v, x, 0.68f, -1.32f, 0.38f, 0.2f, 0.07f, brillo, brillo * 0.95f, brillo * 0.65f); // Faro.
         entero("uEmision", 0); // Restablece la iluminación normal.
     }
 
     /** Dibuja una luz trasera: fuerte al frenar, tenue de noche. */
-    private void trasera(Vehiculo v, float x, float y, float z, float sx, float sy) {
-        float rojo = 0.6f; // Luz trasera apagada.
+    private void trasera(Vehiculo v, float x) {
+        float rojo = 0.85f; // Luz trasera apagada.
         if (v.detenido) { // Está esperando: luz de freno.
             entero("uEmision", 1); // Fuente de luz.
             rojo = 1; // Rojo intenso.
@@ -869,104 +675,20 @@ public class clase4 extends clase3 {
             entero("uEmision", 1); // Fuente de luz.
             rojo = 0.55f; // Rojo suave.
         }
-        piezaDe(v, x, y, z, sx, sy, 0.04f, rojo, 0.04f, 0.04f); // Luz trasera.
+        piezaDe(v, x, 0.68f, 1.32f, 0.35f, 0.17f, 0.07f, rojo, 0.05f, 0.05f); // Luz trasera.
         entero("uEmision", 0); // Restablece la iluminación normal.
     }
 
-    /** Lamborghini Aventador celeste: muy bajo, ancho y en cuña, con tomas laterales y luces en "Y". */
-    private void dibujarAventador(Vehiculo v) {
-        float r = 0.53f; // Celeste #87CEEB: rojo.
-        float g = 0.81f; // Verde.
-        float b = 0.92f; // Azul.
-        float negro = 0.04f; // Detalles negros.
-        piezaDe(v, 0, 0.42f, 0.1f, 1.84f, 0.36f, 2.6f, r, g, b); // Carrocería baja.
-        piezaDe(v, 0, 0.36f, -1.32f, 1.7f, 0.24f, 0.3f, r, g, b); // Trompa en cuña, más baja.
-        piezaDe(v, 0, 0.62f, -0.75f, 1.6f, 0.06f, 0.9f, r, g, b); // Capó.
-        piezaDe(v, 0, 0.78f, 0.2f, 1.3f, 0.34f, 1.2f, 0.08f, 0.10f, 0.14f); // Cabina baja de vidrio oscuro.
-        piezaDe(v, 0, 0.96f, 0.25f, 1.1f, 0.04f, 0.8f, r, g, b); // Techo.
-        piezaDe(v, 0, 0.68f, 1.05f, 1.5f, 0.14f, 0.6f, r, g, b); // Cubierta del motor trasero.
-        for (int lado = -1; lado <= 1; lado += 2) { // Ambos costados.
-            piezaDe(v, lado * 0.93f, 0.5f, 0.45f, 0.04f, 0.2f, 0.6f, negro, negro, negro); // Toma de aire lateral.
-            faro(v, lado * 0.6f, 0.46f, -1.48f, 0.38f, 0.06f); // Faro fino.
-            trasera(v, lado * 0.6f, 0.55f, 1.41f, 0.4f, 0.05f); // Brazo horizontal de la "Y".
-            trasera(v, lado * 0.78f, 0.47f, 1.41f, 0.05f, 0.16f); // Brazo vertical de la "Y".
-        }
-        piezaDe(v, 0, 0.3f, 1.42f, 1.5f, 0.1f, 0.06f, negro, negro, negro); // Difusor trasero.
-        piezaDe(v, 0, 0.82f, 1.3f, 1.5f, 0.04f, 0.22f, negro, negro, negro); // Pequeño alerón.
-        ruedas(v, 0.9f, 0.9f, 0.26f, 0.28f, 0.25f); // Ruedas anchas con llanta oscura.
-    }
-
-    /** Ford Mustang amarillo: capó largo, fastback y dos franjas negras de carrera. */
-    private void dibujarMustang(Vehiculo v) {
-        float r = 1.0f; // Amarillo: rojo.
-        float g = 0.80f; // Verde.
-        float b = 0.08f; // Azul.
-        float negro = 0.04f; // Franjas y parrilla.
-        piezaDe(v, 0, 0.55f, 0, 1.76f, 0.44f, 2.8f, r, g, b); // Carrocería.
-        piezaDe(v, 0, 0.8f, -0.8f, 1.66f, 0.08f, 1.2f, r, g, b); // Capó largo.
-        piezaDe(v, 0, 1.05f, 0.25f, 1.4f, 0.42f, 1.0f, 0.10f, 0.12f, 0.16f); // Cabina de vidrio.
-        piezaDe(v, 0, 1.28f, 0.2f, 1.3f, 0.05f, 0.75f, r, g, b); // Techo.
-        piezaDe(v, 0, 0.96f, 0.85f, 1.36f, 0.24f, 0.35f, 0.10f, 0.12f, 0.16f); // Luneta inclinada (fastback).
-        piezaDe(v, 0, 0.82f, 1.15f, 1.66f, 0.1f, 0.5f, r, g, b); // Maletero corto.
-        for (int lado = -1; lado <= 1; lado += 2) { // Franja izquierda y derecha.
-            piezaDe(v, lado * 0.18f, 0.845f, -0.8f, 0.16f, 0.01f, 1.2f, negro, negro, negro); // Franja sobre el capó.
-            piezaDe(v, lado * 0.18f, 1.305f, 0.2f, 0.16f, 0.01f, 0.75f, negro, negro, negro); // Franja sobre el techo.
-            piezaDe(v, lado * 0.18f, 0.875f, 1.15f, 0.16f, 0.01f, 0.5f, negro, negro, negro); // Franja sobre el maletero.
-            faro(v, lado * 0.68f, 0.62f, -1.42f, 0.24f, 0.14f); // Faro a cada lado de la parrilla.
-            for (int barra = 0; barra < 3; barra++) { // Tres barras verticales por lado.
-                trasera(v, lado * (0.42f + barra * 0.13f), 0.64f, 1.41f, 0.08f, 0.18f); // Luz trasera.
+    /** Auto sencillo, igual al del jugador: carrocería del color pedido, cabina azulada, ruedas y luces. */
+    private void dibujarVehiculo(Vehiculo v, float r, float g, float b) {
+        piezaDe(v, 0, 0.65f, 0, 1.65f, 0.55f, 2.6f, r, g, b); // Carrocería.
+        piezaDe(v, 0, 1.12f, 0.12f, 1.3f, 0.55f, 1.25f, 0.22f, 0.65f, 0.78f); // Cabina azulada.
+        for (int lado = -1; lado <= 1; lado += 2) { // Izquierda y derecha.
+            for (int eje = -1; eje <= 1; eje += 2) { // Eje delantero y trasero.
+                piezaDe(v, lado * 0.88f, 0.38f, eje * 0.82f, 0.24f, 0.58f, 0.6f, 0.055f, 0.065f, 0.08f); // Rueda oscura.
             }
-        }
-        piezaDe(v, 0, 0.6f, -1.41f, 1.06f, 0.2f, 0.04f, negro, negro, negro); // Parrilla negra.
-        ruedas(v, 0.9f, 0.95f, 0.32f, 0.26f, 0.75f); // Ruedas con llanta plateada.
-    }
-
-    /** Suzuki Jimny verde: todoterreno cuadrado y alto, techo negro y rueda de repuesto atrás. */
-    private void dibujarJimny(Vehiculo v) {
-        float r = 0.20f; // Verde selva: rojo.
-        float g = 0.50f; // Verde.
-        float b = 0.28f; // Azul.
-        float negro = 0.05f; // Plásticos negros.
-        piezaDe(v, 0, 0.85f, 0, 1.6f, 0.7f, 2.3f, r, g, b); // Carrocería cuadrada.
-        piezaDe(v, 0, 1.45f, 0.15f, 1.5f, 0.5f, 1.5f, 0.10f, 0.12f, 0.16f); // Cabina de vidrio.
-        piezaDe(v, 0, 1.73f, 0.15f, 1.56f, 0.06f, 1.56f, negro, negro, negro); // Techo negro.
-        piezaDe(v, 0, 1.82f, 0.15f, 1.3f, 0.04f, 1.2f, 0.35f, 0.36f, 0.38f); // Portaequipajes.
-        piezaDe(v, 0, 0.55f, -1.2f, 1.64f, 0.18f, 0.12f, negro, negro, negro); // Parachoques delantero.
-        piezaDe(v, 0, 0.55f, 1.2f, 1.64f, 0.18f, 0.12f, negro, negro, negro); // Parachoques trasero.
-        for (int ranura = -2; ranura <= 2; ranura++) { // Parrilla de cinco ranuras.
-            piezaDe(v, ranura * 0.14f, 0.95f, -1.16f, 0.06f, 0.22f, 0.03f, negro, negro, negro); // Ranura.
-        }
-        for (int lado = -1; lado <= 1; lado += 2) { // Ambos costados.
-            for (int eje = -1; eje <= 1; eje += 2) { // Delante y detrás.
-                piezaDe(v, lado * 0.83f, 0.75f, eje * 0.75f, 0.08f, 0.12f, 0.8f, negro, negro, negro); // Guardabarros.
-            }
-            faro(v, lado * 0.55f, 0.95f, -1.17f, 0.26f, 0.26f); // Faro "redondo".
-            trasera(v, lado * 0.68f, 0.8f, 1.17f, 0.14f, 0.3f); // Luz trasera vertical.
-        }
-        piezaDe(v, 0, 0.95f, 1.3f, 0.6f, 0.6f, 0.2f, negro, negro, negro); // Rueda de repuesto.
-        piezaDe(v, 0, 0.95f, 1.41f, 0.26f, 0.26f, 0.02f, 0.45f, 0.46f, 0.48f); // Centro de la rueda de repuesto.
-        ruedas(v, 0.8f, 0.75f, 0.36f, 0.3f, 0.45f); // Ruedas grandes de todoterreno.
-    }
-
-    /** Dibuja halos de faros (de noche) y de luces de freno (al esperar) del tráfico. */
-    private void halosTrafico() {
-        float visibilidad = Math.max(factorNoche, 0.35f); // De día los halos se ven menos.
-        for (Vehiculo v : trafico) { // Recorre los vehículos.
-            for (int lado = -1; lado <= 1; lado += 2) { // Luz izquierda y derecha.
-                float coseno = (float) Math.cos(v.angulo); // Orientación del vehículo.
-                float seno = (float) Math.sin(v.angulo); // Orientación del vehículo.
-                float x = lado * 0.6f; // Posición lateral local de las luces.
-                if (lucesEncendidas()) { // Faros encendidos.
-                    float delanteX = v.x + coseno * x + seno * -1.45f; // Faro en X del mundo.
-                    float delanteZ = v.z - seno * x + coseno * -1.45f; // Faro en Z del mundo.
-                    caja(delanteX, 0.6f, delanteZ, 1.0f, 1.0f, 1.0f, factorNoche, factorNoche * 0.95f, factorNoche * 0.8f); // Halo del faro.
-                }
-                if (v.detenido) { // Luces de freno.
-                    float atrasX = v.x + coseno * x + seno * 1.42f; // Luz trasera en X del mundo.
-                    float atrasZ = v.z - seno * x + coseno * 1.42f; // Luz trasera en Z del mundo.
-                    caja(atrasX, 0.6f, atrasZ, 0.9f, 0.9f, 0.9f, 0.8f * visibilidad, 0.05f * visibilidad, 0.03f * visibilidad); // Halo rojo.
-                }
-            }
+            faro(v, lado * 0.55f); // Faro delantero.
+            trasera(v, lado * 0.55f); // Luz trasera.
         }
     }
 
@@ -1336,7 +1058,7 @@ public class clase4 extends clase3 {
         float z = posteZ - largoZ * lado * 0.4f; // El tablero sobresale un poco hacia la calle.
         float claro = 0.78f; // Borde gris claro.
         caja(x, ALTURA_TABLERO, z, cruzaX ? LARGO_TABLERO + 0.08f : 0.05f, ALTO_TABLERO + 0.08f, cruzaX ? 0.05f : LARGO_TABLERO + 0.08f, claro, claro, claro - 0.02f); // Marco fino.
-        if (lucesEncendidas()) { // De noche el tablero es retroiluminado: los faros no lo aclaran y el texto contrasta.
+        if (lucesEncendidas()) { // De noche el cartel brilla.
             entero("uEmision", 1); // Conserva su azul oscuro.
         }
         caja(x, ALTURA_TABLERO, z, cruzaX ? LARGO_TABLERO : 0.08f, ALTO_TABLERO, cruzaX ? 0.08f : LARGO_TABLERO, 0.07f, 0.10f, 0.17f); // Tablero azul noche.
@@ -1353,7 +1075,7 @@ public class clase4 extends clase3 {
      */
     private void caraCartel(String texto, float x, float z, float normalX, float normalZ) {
         float[] color = colorSector(indiceSector(texto)); // Color de las fachadas del sector nombrado.
-        float frente = 0.05f; // Distancia de la cara al centro del tablero (grosor 0.08 / 2 + 0.01).
+        float frente = 0.05f; // Texto apenas delante del tablero.
         boolean deNoche = lucesEncendidas(); // De noche el cartel se ilumina con suavidad.
         if (deNoche) { // Iluminado.
             entero("uEmision", 1); // Franja y letras brillan.

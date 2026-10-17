@@ -431,9 +431,9 @@ public class clase4 extends clase3 {
 
     // ==================== 7. TRÁFICO AUTÓNOMO ====================
 
-    protected static final int AVENTADOR = 0; // Auto celeste.
-    protected static final int MUSTANG = 1; // Auto amarillo.
-    protected static final int JIMNY = 2; // Auto verde.
+    protected static final int AUTO_CELESTE = 0; // Auto celeste.
+    protected static final int AUTO_AMARILLO = 1; // Auto amarillo.
+    protected static final int AUTO_VERDE = 2; // Auto verde.
     private static final float CARRIL = 2.5f; // Distancia del centro de la calle al centro del carril derecho.
     private static final float ZONA_CRUCE = 6; // Distancia a un cruce desde la que hay que reservarlo.
     protected static final float RADIO_VEHICULO = 1.4f; // Radio de colisión de cada vehículo autónomo.
@@ -443,14 +443,14 @@ public class clase4 extends clase3 {
         {{0, 0}, {3, 0}, {3, 3}, {5, 3}, {5, 5}, {2, 5}, {2, 2}, {0, 2}}, // Auto amarillo: recorrido con ocho giros.
         {{1, 2}, {4, 2}, {4, 5}, {1, 5}} // Auto verde: rectángulo hacia el Barrio Sur.
     };
-    private static final int[] MODELOS = {AVENTADOR, MUSTANG, JIMNY}; // Modelo de cada ruta.
+    private static final int[] MODELOS = {AUTO_CELESTE, AUTO_AMARILLO, AUTO_VERDE}; // Modelo de cada ruta.
     private static final float[] VELOCIDADES = {10, 8, 6}; // Unidades por segundo de cada vehículo.
     private static final float[][] COLORES_MAPA = {{0.53f, 0.81f, 0.92f}, {1.0f, 0.80f, 0.08f}, {0.30f, 0.85f, 0.40f}}; // Marca de cada modelo en el minimapa.
     private static final float[][] COLORES_AUTO = {{0.53f, 0.81f, 0.92f}, {1.0f, 0.80f, 0.08f}, {0.20f, 0.50f, 0.28f}}; // Carrocería de cada modelo: celeste, amarillo y verde.
 
     /** Estado de un vehículo autónomo: su ruta por los carriles y su posición actual. */
     protected static class Vehiculo {
-        int modelo; // AVENTADOR, MUSTANG o JIMNY.
+        int modelo; // AUTO_CELESTE, AUTO_AMARILLO o AUTO_VERDE.
         float velocidad; // Unidades por segundo cuando avanza.
         int[] nodos; // Número de cada cruce de la ruta.
         float[][] puntos; // Punto de paso X, Z sobre el carril derecho en cada intersección.

@@ -283,7 +283,7 @@ public class ConduccionTest extends TestCase {
         for (clase4.Vehiculo vehiculo : juego.trafico) { // Recorre el tráfico.
             modelos[vehiculo.modelo] = true; // Marca su modelo.
         }
-        assertTrue(modelos[clase4.AVENTADOR] && modelos[clase4.MUSTANG] && modelos[clase4.JIMNY]); // Los tres modelos.
+        assertTrue(modelos[clase4.AUTO_CELESTE] && modelos[clase4.AUTO_AMARILLO] && modelos[clase4.AUTO_VERDE]); // Los tres modelos.
     }
 
     /** Simula 200 s de tráfico: siempre sobre la calle, girando, dando vueltas y sin chocar entre ellos. */

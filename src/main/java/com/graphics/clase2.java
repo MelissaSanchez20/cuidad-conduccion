@@ -5,7 +5,6 @@ import static org.lwjgl.glfw.GLFW.*; // Permite consultar teclas y cambiar el t�
 /**
  * CLASE 2: CREACIÓN Y MOVIMIENTO DEL AUTO.
  * Responsabilidad: conducción (teclado → física con deltaTime), colisiones, cámara de seguimiento,
- * modelo del auto e indicador del título.
  * Orden de lectura: variables, teclado, movimiento, indicador, colisiones, cámara y dibujo.
  */
 public class clase2 extends clase1 {
@@ -23,10 +22,10 @@ public class clase2 extends clase1 {
 
     // ==================== 2. TECLADO Y REINICIO ====================
 
-    /** Atiende acciones que deben ocurrir una sola vez por pulsación. */
-    @Override // Agrega teclas a las de clase1.
+    /** Atiendo acciones que deben ocurrir una sola vez por pulsación. */
+    @Override 
     protected void tecla(int key) {
-        super.tecla(key); // Ejecuta el control ESC definido en clase1.
+        super.tecla(key); // Ejecuto el control ESC definido en clase1.
 
         if (key == GLFW_KEY_C) { // Comprueba si se presionó la tecla de cámara.
             camaraAerea = !camaraAerea; // Invierte el modo de cámara actual.
@@ -81,7 +80,7 @@ public class clase2 extends clase1 {
         }
 
         float factorFrenado = (float) Math.exp(-resistencia * deltaTime); // Calcula la fracción de velocidad conservada.
-        velocidad *= factorFrenado; // Frena solo, poco a poco.
+        velocidad *= factorFrenado; // Frena 
         velocidad = Math.max(-6, Math.min(16, velocidad)); // Limita la reversa a -6 y el avance a 16.
 
         angulo += direccion * velocidad * 0.11f * deltaTime; // Gira según la velocidad; en reversa invierte el giro.
@@ -181,17 +180,17 @@ public class clase2 extends clase1 {
             }
         }
 
-        return true; // Acepta la posición porque no se encontró ningún obstáculo.
+        return true; 
     }
 
     // ==================== 6. CÁMARA ====================
 
-    /** Elige entre una vista general y una cámara situada detrás del auto. */
-    @Override // Personaliza la cámara creada en clase1.
+    /** Eligo entre una vista general y una cámara situada detrás del auto. */
+    @Override 
     protected void configurarCamara() {
-        if (camaraAerea) { // Comprueba si está activa la vista general.
-            super.configurarCamara(); // Reutiliza la cámara oblicua de la primera lección.
-            return; // Evita reemplazarla con la cámara de seguimiento.
+        if (camaraAerea) { // Compruebo si está activa la vista general.
+            super.configurarCamara(); // Reutilizo la cámara oblicua de la primera lección.
+            return; 
         }
 
         float camaraX = autoX + (float) Math.sin(angulo) * 12; // Coloca la cámara 12 unidades detrás en X.
@@ -203,78 +202,77 @@ public class clase2 extends clase1 {
 
     // ==================== 7. DIBUJO DEL AUTO ====================
 
-    /** Dibuja primero la ciudad existente y luego el vehículo. */
-    @Override // Amplía el dibujo de clase1 sin copiar su código.
+    /** Dibujo primero la ciudad existente y luego el vehículo. */
+    @Override 
     protected void escena() {
-        super.escena(); // Dibuja asfalto, calles, edificios y parques.
-        dibujarAuto(); // Añade el modelo del vehículo sobre la ciudad.
+        super.escena(); // asfalto, calles, edificios y parques.
+        dibujarAuto(); //  vehículo sobre la ciudad.
     }
 
     /**
-     * Construye un auto sencillo fucsia (#FF00FF): carrocería, cabina, cuatro ruedas, faros y luces traseras.
-     * Argumentos de pieza(): posición XYZ local (frente hacia -Z), tamaño XYZ y color RGB.
+     * Construyo un auto  fucsia (#FF00FF): 
      */
     protected void dibujarAuto() {
-        pieza(0, 0.65f, 0, 1.65f, 0.55f, 2.6f, 1.0f, 0.0f, 1.0f); // Dibuja la carrocería fucsia.
+        pieza(0, 0.65f, 0, 1.65f, 0.55f, 2.6f, 1.0f, 0.0f, 1.0f); // Dibujo el auto fucsia.
         pieza(0, 1.12f, 0.12f, 1.3f, 0.55f, 1.25f, 0.22f, 0.65f, 0.78f); // Dibuja la cabina azulada.
         float[] ladosRuedas = {-0.88f, 0.88f}; // Ubica ruedas a izquierda y derecha del auto.
         float[] ejesRuedas = {-0.82f, 0.82f}; // Ubica las ruedas delanteras y traseras.
 
         for (float x : ladosRuedas) { // Selecciona uno de los dos lados del vehículo.
             for (float z : ejesRuedas) { // Selecciona el eje delantero o trasero.
-                pieza(x, 0.38f, z, 0.24f, 0.58f, 0.6f, 0.055f, 0.065f, 0.08f); // Dibuja una rueda oscura.
+                pieza(x, 0.38f, z, 0.24f, 0.58f, 0.6f, 0.055f, 0.065f, 0.08f); // Dibujo una rueda oscura.
             }
         }
 
-        float[] ladosFaros = {-0.55f, 0.55f}; // Define la separación lateral de las luces.
-        for (float x : ladosFaros) { // Repite el dibujo para ambos lados.
+        float[] ladosFaros = {-0.55f, 0.55f}; // Defino la separación lateral de las luces.
+        for (float x : ladosFaros) { // Repito el dibujo para ambos lados.
             if (farosEncendidos()) { // Un faro encendido es una fuente de luz: se ve brillante.
-                entero("uEmision", 1); // Dibuja la bombilla sin oscurecerla con la iluminación.
+                entero("uEmision", 1); // Dibujo la bombilla sin oscurecerla con la iluminación.
             }
-            pieza(x, 0.68f, -1.32f, 0.38f, 0.2f, 0.07f, 1, 0.95f, 0.65f); // Dibuja un faro delantero claro.
+            pieza(x, 0.68f, -1.32f, 0.38f, 0.2f, 0.07f, 1, 0.95f, 0.65f); // Dibujo un faro delantero claro.
             entero("uEmision", 0); // Las demás piezas reciben la luz del entorno.
             float rojoTrasero = 0.85f; // Rojo normal de la luz trasera apagada.
             if (frenando) { // Al frenar la luz trasera se enciende con fuerza.
                 entero("uEmision", 1); // La luz de freno brilla por sí misma.
-                rojoTrasero = 1; // Usa el rojo más intenso.
+                rojoTrasero = 1; // Uso el rojo más intenso.
             } else if (farosEncendidos()) { // Con los faros encendidos la luz trasera queda tenue.
                 entero("uEmision", 1); // La luz de posición también es una fuente de luz.
-                rojoTrasero = 0.55f; // Usa un rojo más suave que el de freno.
+                rojoTrasero = 0.55f; // Uso un rojo más suave que el de freno.
             }
-            pieza(x, 0.68f, 1.32f, 0.35f, 0.17f, 0.07f, rojoTrasero, 0.05f, 0.05f); // Dibuja una luz trasera roja.
+            pieza(x, 0.68f, 1.32f, 0.35f, 0.17f, 0.07f, rojoTrasero, 0.05f, 0.05f); // Dibujo una luz trasera roja.
             entero("uEmision", 0); // Devuelve la iluminación normal a las siguientes piezas.
         }
     }
 
     /** Convierte un punto local del auto (X a la derecha, Z hacia atrás) en coordenadas X, Z de la ciudad. */
     protected float[] puntoDelAuto(float x, float z) {
-        float coseno = (float) Math.cos(angulo); // Calcula el coseno de la orientación del auto.
-        float seno = (float) Math.sin(angulo); // Calcula el seno de la misma orientación.
-        return new float[] {autoX + coseno * x + seno * z, autoZ - seno * x + coseno * z}; // Gira y traslada el punto.
+        float coseno = (float) Math.cos(angulo); // Calculo el coseno de la orientación del auto.
+        float seno = (float) Math.sin(angulo); // Calculo el seno de la misma orientación.
+        return new float[] {autoX + coseno * x + seno * z, autoZ - seno * x + coseno * z}; // Giro y traslada el punto.
     }
 
     /** Indica si los faros delanteros están encendidos; clase3 añade el interruptor F. */
     protected boolean farosEncendidos() {
-        return false; // En clase2 todavía no existen luces que encender.
+        return false; // aqui clase2 todavía no existen luces que encender.
     }
 
     /** Transforma una pieza del espacio local del auto al espacio de la ciudad. */
     protected void pieza(float x, float y, float z, float sx, float sy, float sz, float r, float g, float b) {
-        piezaEn(autoX, autoZ, angulo, x, y, z, sx, sy, sz, r, g, b); // Usa la posición y orientación del jugador.
+        piezaEn(autoX, autoZ, angulo, x, y, z, sx, sy, sz, r, g, b); // Uso la posición y orientación del jugador.
     }
 
-    /** Dibuja una pieza local (X a la derecha, Z hacia atrás) de cualquier vehículo ubicado en origen X, Z con un giro. */
+    /** Dibujo una pieza local (X a la derecha, Z hacia atrás) de cualquier vehículo ubicado en origen X, Z con un giro. */
     protected void piezaEn(float origenX, float origenZ, float giro, float x, float y, float z, float sx, float sy, float sz, float r, float g, float b) {
         float coseno = (float) Math.cos(giro); // Coseno de la orientación del vehículo.
         float seno = (float) Math.sin(giro); // Seno de la misma orientación.
-        float mundoX = origenX + coseno * x + seno * z; // Gira y traslada el punto en X.
-        float mundoZ = origenZ - seno * x + coseno * z; // Gira y traslada el punto en Z.
-        cajaGirada(mundoX, y, mundoZ, sx, sy, sz, r, g, b, giro); // Dibuja la pieza con la orientación del vehículo.
+        float mundoX = origenX + coseno * x + seno * z; // Giro y traslada el punto en X.
+        float mundoZ = origenZ - seno * x + coseno * z; // Giro y traslada el punto en Z.
+        cajaGirada(mundoX, y, mundoZ, sx, sy, sz, r, g, b, giro); // Dibujo la pieza con la orientación del vehículo.
     }
 
     /** Punto de entrada para ejecutar únicamente la segunda etapa. */
     public static void main(String[] args) {
-        clase2 aplicacion = new clase2(); // Crea la aplicación con ciudad y vehículo.
-        aplicacion.run(); // Inicia la ventana y el ciclo de dibujo heredados.
+        clase2 aplicacion = new clase2(); // Creo la aplicación con ciudad y vehículo.
+        aplicacion.run(); // Inicio la ventana y el ciclo de dibujo heredados.
     }
 }

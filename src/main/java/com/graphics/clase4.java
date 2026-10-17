@@ -1,4 +1,4 @@
-package com.graphics; // Reúne la versión final con las otras tres lecciones.
+package com.graphics; 
 
 import static org.lwjgl.glfw.GLFW.*; // Permite consultar la tecla que controla el minimapa.
 import static org.lwjgl.opengl.GL33.*; // Permite cambiar viewport, recorte y buffers de dibujo.
@@ -19,18 +19,18 @@ public class clase4 extends clase3 {
     protected float tiempo = 0; // Acumula los segundos de la partida hasta completar el recorrido.
     protected float relojCiudad = 0; // Reloj de los semáforos: avanza siempre, también al ganar y tras reiniciar.
 
-    protected static final int FASE_ROJO = 0; // Fase del semáforo: detenerse.
-    protected static final int FASE_VERDE = 1; // Fase del semáforo: avanzar.
-    protected static final int FASE_AMARILLO = 2; // Fase del semáforo: precaución.
-    protected static final float CICLO_SEMAFORO = 12; // Segundos de una vuelta completa rojo → verde → amarillo.
+    protected static final int FASE_ROJO = 0; // semáforo: detenerse.
+    protected static final int FASE_VERDE = 1; // semáforo: avanzar.
+    protected static final int FASE_AMARILLO = 2; //  semáforo: precaución.
+    protected static final float CICLO_SEMAFORO = 12; // Segundos de una vuelta completa rojo ,verde ,amarillo.
     protected static final float[][] SEMAFOROS = crearSemaforos(); // Cada fila: poste X, Z y sentido X, Z hacia el cruce.
 
-    protected static final int ARBOL_VERDE = 0; // Árbol de hoja verde común.
-    protected static final int ARBOL_SAKURA = 1; // Cerezo japonés en flor (#FF69B4).
-    protected static final int ARBOL_TAJIBO = 2; // Tajibo blanco en flor (#FDFBF7).
+    protected static final int ARBOL_VERDE = 0; 
+    protected static final int ARBOL_SAKURA = 1; // (#FF69B4).
+    protected static final int ARBOL_TAJIBO = 2; //  (#FDFBF7).
     private static final float[] COLOR_SAKURA = {1.0f, 0.412f, 0.706f}; // #FF69B4 convertido a RGB entre 0 y 1.
     private static final float[] COLOR_TAJIBO = {0.992f, 0.984f, 0.969f}; // #FDFBF7 convertido a RGB entre 0 y 1.
-    private static final float CESPED = 0.37f; // Altura de la cara superior del césped de los parques.
+    private static final float CESPED = 0.37f; 
     private static final float[][] ILUMINARIAS = {{-2, -2}, {-2, 2}, {2, -2}, {2, 2}}; // Faroles de la plaza respecto a su centro.
     protected static final float[][] DESTINOS = { // Cada fila contiene X y Z de una parada sobre la calle.
         {50, -50}, // Primera entrega: esquina noreste, Barrio Norte.
@@ -60,7 +60,7 @@ public class clase4 extends clase3 {
     }
 
     /** Reinicia el vehículo y el progreso de las entregas. */
-    @Override // Amplía el reinicio definido en clase2.
+    @Override 
     protected void reiniciar() {
         super.reiniciar(); // Restaura posición, velocidad y orientación del vehículo.
         entregas = 0; // Vuelve a seleccionar la primera parada.
@@ -98,16 +98,15 @@ public class clase4 extends clase3 {
     }
 
     /**
-     * Título corto de la ventana: nombre del juego y estado de la partida. La velocidad y los
-     * controles ya se ven en el panel y en el menú, así que no se repiten aquí.
-     */
-    @Override // Reemplaza el indicador largo de clase2/clase3.
+     * Título del juego*/
+
+    @Override 
     protected String textoIndicador() {
         String titulo = "Luces de Neon"; // Nombre del juego.
         if (estado == INICIO) { // Portada.
             return titulo + " | MENU"; // El juego no empezó.
         }
-        if (estado == PAUSA) { // Juego detenido.
+        if (estado == PAUSA) { 
             titulo += " | PAUSA"; // Indica la pausa.
         }
         if (entregas == DESTINOS.length) { // Todas las paradas completadas.
@@ -118,13 +117,13 @@ public class clase4 extends clase3 {
 
     // ==================== 4. ESCENA FINAL Y DESTINO ====================
 
-    /** Añade decoración y señal del destino a la escena iluminada. */
-    @Override // Amplía el dibujo acumulado de las tres etapas anteriores.
+    /**  decoración y señal del destino a la escena iluminada. */
+    @Override 
     protected void escena() {
         super.escena(); // Dibuja la ciudad, el auto y las farolas.
-        if (!vistaMapa) { // Los detalles pequeños solo son necesarios en la vista principal.
-            decorarCiudad(); // Añade árboles, bancos, ventanas y señalización urbana.
-            dibujarTrafico(); // Añade los vehículos autónomos.
+        if (!vistaMapa) { // detalles pequeños para  la vista principal.
+            decorarCiudad(); // árboles, bancos, ventanas y señalización urbana.
+            dibujarTrafico(); //  vehículos autónomos.
         }
         if (entregas < DESTINOS.length) { // Dibuja un objetivo únicamente mientras queden entregas.
             dibujarDestino(); // Coloca la marca dorada en la parada activa.
@@ -176,9 +175,7 @@ public class clase4 extends clase3 {
     }
 
     // ---------- Parques ----------
-    // Todo se arma con caja(x, y, z, ancho, alto, largo, r, g, b): dónde, qué tamaño y qué color.
-    // La altura se cuenta desde CESPED (el pasto) y el centro de una caja está a la mitad de su alto.
-
+    // Todo se arma con caja
     /** Elige la especie de un árbol; el patrón mezcla las tres especies en cada parque y siempre da lo mismo. */
     protected static int especieArbol(int fila, int columna, int indice) {
         return (fila + columna + indice) % 3; // 0 verde común, 1 sakura, 2 tajibo blanco.
@@ -188,7 +185,7 @@ public class clase4 extends clase3 {
     private void dibujarParque(int fila, int columna, float x, float z) {
         if (fila == PLAZA && columna == PLAZA) { // El parque del centro de la ciudad es la plaza.
             dibujarPlazaCentral(x, z); // Fuente, faroles, árboles y bancos.
-            return; // No lleva la decoración de los demás parques.
+            return; 
         }
         float[] esquinas = {-2.8f, 2.8f}; // Distancia de los árboles al centro del parque.
         int indice = 0; // Numera los árboles para elegir su especie.

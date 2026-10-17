@@ -21,7 +21,7 @@ public class clase3 extends clase2 {
     protected static final float[][] LUCES = crearFarolas();
 
     /**
-     * Coloca una farola junto a las intersecciones alternadas como un tablero de ajedrez.
+     * Coloco una farola junto a las intersecciones alternadas como un tablero de ajedrez.
      * Así cada calle tiene una farola cerca y todos los sectores quedan iluminados.
      * El poste va en la esquina de acera de la manzana vecina y su brazo lleva la bombilla sobre la calle.
      * Además, la plaza central lleva una farola en cada una de sus cuatro esquinas.
@@ -82,7 +82,7 @@ public class clase3 extends clase2 {
 
     // ==================== 2. CONTROLES E INDICADORES ====================
 
-    /** Añade los interruptores de iluminación a los controles existentes. */
+    /** Añado los interruptores de iluminación a los controles existentes. */
     @Override // Amplía el método de teclado de clase2.
     protected void tecla(int key) {
         super.tecla(key); // Conserva ESC, C y R.
@@ -94,7 +94,7 @@ public class clase3 extends clase2 {
         }
     }
 
-    /** Prepara el estado de iluminación que clase2 incorpora al título de la ventana. */
+    /** Preparo el estado de iluminación que clase2 incorpora al título de la ventana. */
     @Override // Añade información al espacio reservado para indicadores.
     protected String estadoExtra() {
         String ambiente = "Dia"; // Usa día como texto inicial.
@@ -184,7 +184,7 @@ public class clase3 extends clase2 {
 
     // ==================== 5. MODELOS DE LAS FAROLAS ====================
 
-    /** Dibuja cada farola en la misma posición usada para calcular su luz. */
+    /** Dibujo cada farola en la misma posición usada para calcular su luz. */
     @Override // Añade geometría a la ciudad y al auto heredados.
     protected void escena() {
         super.escena(); // Dibuja la ciudad y el vehículo de las primeras dos lecciones.

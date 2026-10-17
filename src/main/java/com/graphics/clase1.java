@@ -14,7 +14,6 @@ import static org.lwjgl.opengl.GL33.*; // Importa las funciones OpenGL hasta la 
  * Sigue el flujo de los ejemplos: iniciar, loop, dibujar y limpiar.
  * Coordenadas: X = izquierda/derecha; Y = altura; Z = profundidad.
  * Las clases siguientes reutilizan esta base mediante extends y super.
- * Los comentarios explican las instrucciones; las llaves solo delimitan bloques.
  */
 public class clase1 {
 
@@ -459,50 +458,50 @@ public class clase1 {
 
     // ==================== 7. GEOMETRÍA DEL CUBO: VAO Y VBO ====================
 
-    /** Crea un cubo explícito, con posición XYZ y normal XYZ por vértice, como en los ejemplos. */
+    /** Crea un cubo , con posición XYZ y normal XYZ por vértice  */
     private void crearCubo() {
         float[] vertices = { // Cada línea describe un vértice: X, Y, Z, normalX, normalY, normalZ.
             -0.5f, -0.5f, 0.5f, 0, 0, 1, // Cara frontal: esquina inferior izquierda, normal hacia +Z.
-            0.5f, -0.5f, 0.5f, 0, 0, 1, // Cara frontal: esquina inferior derecha.
-            0.5f, 0.5f, 0.5f, 0, 0, 1, // Cara frontal: esquina superior derecha; termina el primer triángulo.
-            0.5f, 0.5f, 0.5f, 0, 0, 1, // Cara frontal: repite la esquina para el segundo triángulo.
-            -0.5f, 0.5f, 0.5f, 0, 0, 1, // Cara frontal: esquina superior izquierda.
-            -0.5f, -0.5f, 0.5f, 0, 0, 1, // Cara frontal: cierra el segundo triángulo.
+            0.5f, -0.5f, 0.5f, 0, 0, 1, //  esquina inferior derecha.
+            0.5f, 0.5f, 0.5f, 0, 0, 1, //  esquina superior derecha; termina el primer triángulo.
+            0.5f, 0.5f, 0.5f, 0, 0, 1, //  repite la esquina para el segundo triángulo.
+            -0.5f, 0.5f, 0.5f, 0, 0, 1, // esquina superior izquierda.
+            -0.5f, -0.5f, 0.5f, 0, 0, 1, //  cierra el segundo triángulo.
 
             -0.5f, -0.5f, -0.5f, 0, 0, -1, // Cara trasera: primer vértice, normal hacia -Z.
-            -0.5f, 0.5f, -0.5f, 0, 0, -1, // Cara trasera: segundo vértice.
-            0.5f, 0.5f, -0.5f, 0, 0, -1, // Cara trasera: termina el primer triángulo.
-            0.5f, 0.5f, -0.5f, 0, 0, -1, // Cara trasera: inicia el segundo triángulo.
-            0.5f, -0.5f, -0.5f, 0, 0, -1, // Cara trasera: esquina inferior derecha.
-            -0.5f, -0.5f, -0.5f, 0, 0, -1, // Cara trasera: cierra la cara.
+            -0.5f, 0.5f, -0.5f, 0, 0, -1, // segundo vértice.
+            0.5f, 0.5f, -0.5f, 0, 0, -1, //  termina el primer triángulo.
+            0.5f, 0.5f, -0.5f, 0, 0, -1, //  inicia el segundo triángulo.
+            0.5f, -0.5f, -0.5f, 0, 0, -1, //  esquina inferior derecha.
+            -0.5f, -0.5f, -0.5f, 0, 0, -1, // cierra la cara.
 
             -0.5f, 0.5f, 0.5f, -1, 0, 0, // Cara izquierda: primer vértice, normal hacia -X.
-            -0.5f, 0.5f, -0.5f, -1, 0, 0, // Cara izquierda: segundo vértice.
-            -0.5f, -0.5f, -0.5f, -1, 0, 0, // Cara izquierda: termina el primer triángulo.
-            -0.5f, -0.5f, -0.5f, -1, 0, 0, // Cara izquierda: inicia el segundo triángulo.
-            -0.5f, -0.5f, 0.5f, -1, 0, 0, // Cara izquierda: esquina inferior frontal.
-            -0.5f, 0.5f, 0.5f, -1, 0, 0, // Cara izquierda: cierra la cara.
+            -0.5f, 0.5f, -0.5f, -1, 0, 0, //  segundo vértice.
+            -0.5f, -0.5f, -0.5f, -1, 0, 0, //  termina el primer triángulo.
+            -0.5f, -0.5f, -0.5f, -1, 0, 0, //  inicia el segundo triángulo.
+            -0.5f, -0.5f, 0.5f, -1, 0, 0, //  esquina inferior frontal.
+            -0.5f, 0.5f, 0.5f, -1, 0, 0, // cierra la cara.
 
             0.5f, 0.5f, 0.5f, 1, 0, 0, // Cara derecha: primer vértice, normal hacia +X.
-            0.5f, -0.5f, 0.5f, 1, 0, 0, // Cara derecha: segundo vértice.
-            0.5f, -0.5f, -0.5f, 1, 0, 0, // Cara derecha: termina el primer triángulo.
-            0.5f, -0.5f, -0.5f, 1, 0, 0, // Cara derecha: inicia el segundo triángulo.
-            0.5f, 0.5f, -0.5f, 1, 0, 0, // Cara derecha: esquina superior trasera.
-            0.5f, 0.5f, 0.5f, 1, 0, 0, // Cara derecha: cierra la cara.
+            0.5f, -0.5f, 0.5f, 1, 0, 0, //  segundo vértice.
+            0.5f, -0.5f, -0.5f, 1, 0, 0, //  termina el primer triángulo.
+            0.5f, -0.5f, -0.5f, 1, 0, 0, //  inicia el segundo triángulo.
+            0.5f, 0.5f, -0.5f, 1, 0, 0, //  esquina superior trasera.
+            0.5f, 0.5f, 0.5f, 1, 0, 0, //  cierra la cara.
 
             -0.5f, 0.5f, -0.5f, 0, 1, 0, // Cara superior: primer vértice, normal hacia +Y.
-            -0.5f, 0.5f, 0.5f, 0, 1, 0, // Cara superior: segundo vértice.
-            0.5f, 0.5f, 0.5f, 0, 1, 0, // Cara superior: termina el primer triángulo.
-            0.5f, 0.5f, 0.5f, 0, 1, 0, // Cara superior: inicia el segundo triángulo.
-            0.5f, 0.5f, -0.5f, 0, 1, 0, // Cara superior: esquina trasera derecha.
-            -0.5f, 0.5f, -0.5f, 0, 1, 0, // Cara superior: cierra la cara.
+            -0.5f, 0.5f, 0.5f, 0, 1, 0, //  segundo vértice.
+            0.5f, 0.5f, 0.5f, 0, 1, 0, //  termina el primer triángulo.
+            0.5f, 0.5f, 0.5f, 0, 1, 0, //  inicia el segundo triángulo.
+            0.5f, 0.5f, -0.5f, 0, 1, 0, //  esquina trasera derecha.
+            -0.5f, 0.5f, -0.5f, 0, 1, 0, //  cierra la cara.
 
             -0.5f, -0.5f, -0.5f, 0, -1, 0, // Cara inferior: primer vértice, normal hacia -Y.
-            0.5f, -0.5f, -0.5f, 0, -1, 0, // Cara inferior: segundo vértice.
-            0.5f, -0.5f, 0.5f, 0, -1, 0, // Cara inferior: termina el primer triángulo.
-            0.5f, -0.5f, 0.5f, 0, -1, 0, // Cara inferior: inicia el segundo triángulo.
-            -0.5f, -0.5f, 0.5f, 0, -1, 0, // Cara inferior: esquina frontal izquierda.
-            -0.5f, -0.5f, -0.5f, 0, -1, 0 // Cara inferior: cierra los 36 vértices del cubo.
+            0.5f, -0.5f, -0.5f, 0, -1, 0, //segundo vértice.
+            0.5f, -0.5f, 0.5f, 0, -1, 0, //  termina el primer triángulo.
+            0.5f, -0.5f, 0.5f, 0, -1, 0, //  inicia el segundo triángulo.
+            -0.5f, -0.5f, 0.5f, 0, -1, 0, //  esquina frontal izquierda.
+            -0.5f, -0.5f, -0.5f, 0, -1, 0 //  cierra los 36 vértices del cubo.
         };
         vao = glGenVertexArrays(); // Crea el VAO.
         glBindVertexArray(vao); // Activa ese VAO para configurarlo.
